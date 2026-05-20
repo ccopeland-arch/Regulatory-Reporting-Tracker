@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Regulatory Reporting Tracker — Base Power Company</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:14px}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f1f5f9;color:#1e293b;min-height:100vh}
+
+/* HEADER */
+.hdr{background:#0f2444;color:#fff;padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:54px;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+.hdr-l{display:flex;align-items:center;gap:10px}
+.hdr-logo{font-size:17px;font-weight:700;letter-spacing:-.3px}
+.hdr-sub{font-size:11px;color:#94a3b8;border-left:1px solid #334155;padding-left:10px;white-space:nowrap}
+.hdr-r{display:flex;align-items:center;gap:6px}
+
+/* LAYOUT */
+.app{display:flex;height:calc(100vh - 54px)}
+.main{flex:1;overflow-y:auto;padding:16px 20px;min-width:0}
+.side{width:430px;min-width:430px;background:#fff;border-left:1px solid #e2e8f0;overflow-y:auto;display:none;flex-direction:column}
+.side.open{display:flex}
+
+/* MARKET TABS */
+.tabs{display:flex;gap:3px;margin-bottom:14px;background:#fff;padding:3px;border-radius:8px;border:1px solid #e2e8f0;width:fit-content}
+.tab{padding:5px 13px;border:none;background:none;border-radius:5px;cursor:pointer;font-size:12px;font-weight:500;color:#64748b;transition:all .12s}
+.tab.active{background:#0f2444;color:#fff}
+.tab:hover:not(.active){background:#f1f5f9}
+
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.sc{background:#fff;border-radius:8px;padding:12px 14px;border:1px solid #e2e8f0;cursor:pointer;transition:all .12s;user-select:none}
+.sc:hover{border-color:#94a3b8}
+.sc.active{border-color:#2563eb;box-shadow:0 0 0 2px #bfdbfe}
+.sv{font-size:26px;font-weight:700;line-height:1}
+.sl{font-size:10px;color:#64748b;margin-top:3px;font-weight:500;text-transform:uppercase;letter-spacing:.3px}
+.sc-od .sv{color:#dc2626}.sc-soon .sv{color:#ea580c}.sc-up .sv{color:#2563eb}.sc-done .sv{color:#16a34a}.sc-tot .sv{color:#1e293b}
+
+/* ALERT */
+.alert{background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:9px 12px;margin-bottom:11px;font-size:12px;color:#991b1b;display:flex;align-items:center;gap:7px}
+.alert.warn{background:#fff7ed;border-color:#fed7aa;color:#9a3412}
+
+/* FILTERS */
+.fbar{display:flex;gap:7px;margin-bottom:12px;align-items:center;flex-wrap:wrap}
+.sw{position:relative;flex:1;min-width:180px}
+.sw .si{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:#94a3b8;font-size:13px;pointer-events:none}
+.sinput{width:100%;padding:6px 10px 6px 28px;border:1px solid #e2e8f0;border-radius:6px;font-size:12px;background:#fff}
+.sinput:focus{outline:none;border-color:#2563eb}
+.fsel{padding:6px 9px;border:1px solid #e2e8f0;border-radius:6px;font-size:12px;background:#fff;color:#1e293b;cursor:pointer}
+.fsel:focus{outline:none;border-color:#2563eb}
+.arc-tog{font-size:11px;color:#94a3b8;cursor:pointer;display:flex;align-items:center;gap:4px;user-select:none;white-space:nowrap}
+.arc-tog:hover{color:#64748b}
+
+/* BUTTONS */
+.btn{padding:6px 13px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;border:none;transition:all .12s;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.btn-p{background:#2563eb;color:#fff}.btn-p:hover{background:#1d4ed8}
+.btn-s{background:#fff;color:#374151;border:1px solid #e2e8f0}.btn-s:hover{background:#f8fafc}
+.btn-d{background:#fee2e2;color:#dc2626;border:1px solid #fecaca}.btn-d:hover{background:#fecaca}
+.btn-g{background:#dcfce7;color:#16a34a;border:1px solid #bbf7d0}.btn-g:hover{background:#bbf7d0}
+.btn-sm{padding:3px 9px;font-size:11px}
+.btn-xs{padding:2px 7px;font-size:11px}
+
+/* TABLE */
+.tbl-wrap{background:#fff;border-radius:8px;border:1px solid #e2e8f0;overflow:hidden}
+.tbl-wrap table{width:100%;border-collapse:collapse}
+.tbl-wrap th{background:#f8fafc;padding:8px 11px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#64748b;border-bottom:1px solid #e2e8f0;white-space:nowrap}
+.tbl-wrap td{padding:9px 11px;border-bottom:1px solid #f1f5f9;font-size:12px;vertical-align:middle}
+.tbl-wrap tr:last-child td{border-bottom:none}
+.tbl-wrap tr.data:hover td{background:#f8fafc;cursor:pointer}
+.tbl-wrap tr.sel td{background:#eff6ff!important}
+.tbl-wrap tr.arch td{opacity:.4}
+.grp-hdr td{background:#f8fafc!important;padding:6px 11px!important;font-size:10px!important;font-weight:700!important;text-transform:uppercase!important;letter-spacing:.5px!important;color:#64748b!important;border-bottom:1px solid #e2e8f0!important;cursor:default!important}
+.grp-hdr:hover td{background:#f8fafc!important}
+
+/* BADGES */
+.bdg{display:inline-flex;align-items:center;padding:2px 7px;border-radius:999px;font-size:10px;font-weight:700;white-space:nowrap}
+.b-critical{background:#fee2e2;color:#dc2626}
+.b-high{background:#ffedd5;color:#ea580c}
+.b-medium{background:#fef9c3;color:#ca8a04}
+.b-low{background:#dcfce7;color:#16a34a}
+.b-overdue{background:#dc2626;color:#fff}
+.b-soon{background:#ea580c;color:#fff}
+.b-upcoming{background:#dbeafe;color:#1d4ed8}
+.b-scheduled{background:#f1f5f9;color:#64748b}
+.b-complete{background:#dcfce7;color:#16a34a}
+.b-inprog{background:#ede9fe;color:#7c3aed}
+.b-ongoing{background:#e0f2fe;color:#0369a1}
+.b-event{background:#f3f4f6;color:#475569}
+.b-PUCT{background:#dbeafe;color:#1d4ed8}
+.b-ERCOT{background:#fce7f3;color:#be185d}
+.b-FERC{background:#e0e7ff;color:#4338ca}
+.b-PJM{background:#d1fae5;color:#065f46}
+.b-ICC{background:#fef3c7;color:#92400e}
+.b-SOS{background:#f3f4f6;color:#374151}
+.b-TC{background:#f5f3ff;color:#5b21b6}
+.b-EOP{background:#fff1f2;color:#be123c}
+.b-Corporate{background:#f3f4f6;color:#374151}
+
+/* DATE CELL */
+.dc{display:flex;flex-direction:column;gap:1px}
+.dc-main{font-weight:600;font-size:12px}
+.dc-sub{font-size:10px;color:#94a3b8}
+.od{color:#dc2626}.so{color:#ea580c}.up{color:#2563eb}
+
+/* DETAIL PANEL */
+.dp-hdr{padding:14px 16px;border-bottom:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:flex-start;background:#f8fafc;position:sticky;top:0;z-index:10}
+.dp-id{font-size:10px;color:#64748b;font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin-bottom:2px}
+.dp-title{font-size:14px;font-weight:600;color:#0f172a;line-height:1.3}
+.dp-close{background:none;border:none;font-size:17px;cursor:pointer;color:#94a3b8;padding:2px 5px;border-radius:4px}
+.dp-close:hover{background:#e2e8f0;color:#374151}
+.dp-body{padding:14px;flex:1}
+.sec{margin-bottom:16px}
+.sec-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#94a3b8;margin-bottom:7px}
+.dg{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.df{display:flex;flex-direction:column;gap:2px}
+.df-l{font-size:10px;color:#94a3b8;font-weight:500}
+.df-v{font-size:12px;color:#1e293b;font-weight:500}
+.dta{width:100%;padding:7px 9px;border:1px solid #e2e8f0;border-radius:6px;font-size:11px;font-family:inherit;resize:vertical;min-height:65px;color:#1e293b}
+.dta:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 2px #bfdbfe}
+.dinp{width:100%;padding:5px 9px;border:1px solid #e2e8f0;border-radius:6px;font-size:11px;font-family:inherit;color:#1e293b}
+.dinp:focus{outline:none;border-color:#2563eb}
+
+/* LINKS */
+.li{display:flex;align-items:center;gap:5px;padding:5px 7px;background:#f8fafc;border-radius:5px;margin-bottom:3px;font-size:11px}
+.li a{color:#2563eb;text-decoration:none;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.li a:hover{text-decoration:underline}
+.lr{background:none;border:none;color:#94a3b8;cursor:pointer;font-size:13px;padding:0 2px;border-radius:3px}
+.lr:hover{background:#fee2e2;color:#dc2626}
+
+/* ATTACHMENTS */
+.att{display:flex;align-items:center;gap:7px;padding:7px;background:#f8fafc;border-radius:6px;margin-bottom:3px;font-size:11px}
+.att-info{flex:1}
+.att-name{font-weight:500;color:#1e293b}
+.att-meta{color:#94a3b8;font-size:10px}
+
+/* UPLOAD */
+.uparea{border:2px dashed #e2e8f0;border-radius:7px;padding:14px;text-align:center;cursor:pointer;transition:all .12s;font-size:11px;color:#94a3b8}
+.uparea:hover,.uparea.drag{border-color:#2563eb;background:#eff6ff;color:#2563eb}
+
+/* HISTORY */
+.hist{padding:7px 9px;background:#f8fafc;border-radius:6px;border-left:3px solid #16a34a;margin-bottom:5px;font-size:11px}
+.hist-d{font-weight:600;color:#0f172a;margin-bottom:1px}
+.hist-by{color:#64748b}
+.hist-n{color:#475569;margin-top:2px;font-style:italic}
+
+/* COMPLETE FORM */
+.cf{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:7px;padding:11px;margin-bottom:10px}
+.fr{display:flex;gap:7px;margin-bottom:7px}
+.fg{flex:1}
+.fg label{display:block;font-size:10px;font-weight:700;color:#64748b;margin-bottom:3px;text-transform:uppercase;letter-spacing:.3px}
+.fg input,.fg textarea,.fg select{width:100%;padding:5px 8px;border:1px solid #e2e8f0;border-radius:5px;font-size:11px;font-family:inherit}
+.fg textarea{min-height:45px;resize:vertical}
+
+/* MODAL */
+.mover{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px}
+.mover.hide{display:none}
+.modal{background:#fff;border-radius:10px;width:580px;max-width:100%;max-height:88vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.mhdr{padding:14px 18px;border-bottom:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:#fff;z-index:10}
+.mtitle{font-size:15px;font-weight:600}
+.mbody{padding:18px}
+.mfooter{padding:10px 18px;border-top:1px solid #e2e8f0;display:flex;justify-content:flex-end;gap:7px;position:sticky;bottom:0;background:#fff}
+
+/* MISC */
+.div{height:1px;background:#e2e8f0;margin:11px 0}
+.empty{text-align:center;padding:44px 20px;color:#94a3b8}
+.empty-i{font-size:30px;margin-bottom:7px}
+.empty-t{font-size:14px;font-weight:500;color:#64748b;margin-bottom:3px}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:#94a3b8}
+.note-box{background:#fff7ed;border:1px solid #fed7aa;border-radius:5px;padding:6px 9px;font-size:10px;color:#92400e;margin-top:5px}
+/* ARCHIVE VIEW */
+.arch-view{padding:4px 0}
+.arch-filing{background:#fff;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:12px;overflow:hidden}
+.arch-filing-hdr{padding:11px 14px;background:#f8fafc;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.arch-filing-title{font-size:13px;font-weight:600;color:#0f172a;flex:1}
+.arch-sub-id{font-size:10px;color:#94a3b8;font-weight:600;letter-spacing:.4px}
+.arch-entry{padding:10px 14px;border-bottom:1px solid #f1f5f9;display:flex;align-items:flex-start;gap:12px}
+.arch-entry:last-child{border-bottom:none}
+.arch-date{font-size:12px;font-weight:600;color:#0f172a;white-space:nowrap;min-width:90px}
+.arch-meta{flex:1;font-size:11px;color:#475569;line-height:1.6}
+.arch-atts{display:flex;flex-direction:column;gap:4px;margin-top:5px}
+.arch-att{display:flex;align-items:center;gap:6px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:5px;padding:4px 8px;font-size:11px}
+.arch-att-name{flex:1;color:#065f46;font-weight:500}
+.arch-empty{text-align:center;padding:40px;color:#94a3b8;font-size:13px}
+@media(max-width:900px){.stats{grid-template-columns:repeat(2,1fr)}.side{width:100%;min-width:100%;position:fixed;inset:0;top:54px;z-index:50}}
+@media(max-width:600px){.stats{grid-template-columns:repeat(2,1fr)}.hdr-sub{display:none}}
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <div class="hdr-l">
+    <div class="hdr-logo">⚡ Base Power</div>
+    <div class="hdr-sub">Regulatory Reporting Tracker</div>
+  </div>
+  <div class="hdr-r">
+    <button class="btn btn-s btn-sm" onclick="exportICS()">📅 Export Calendar</button>
+    <button class="btn btn-p btn-sm" onclick="openAddModal()">+ Add Filing</button>
+  </div>
+</header>
+
+<div class="app">
+  <div class="main" id="main">
+    <div id="alertBanner" class="alert" style="display:none"></div>
+    <div class="tabs" id="tabs">
+      <button class="tab active" onclick="setMarket('Texas',this)">Texas</button>
+      <button class="tab" onclick="setMarket('Illinois',this)">Illinois</button>
+      <button class="tab" onclick="setMarket('FERC',this)">FERC</button>
+      <button class="tab" onclick="setMarket('PJM',this)">PJM</button>
+      <button class="tab" onclick="setMarket('Corporate',this)">Corporate / SOS</button>
+      <button class="tab" onclick="setMarket('All',this)">All Markets</button>
+      <button class="tab" onclick="setMarket('Archive',this)" style="border-left:1px solid #e2e8f0;margin-left:4px;padding-left:16px">📁 Completed Archive</button>
+    </div>
+    <div class="stats" id="statsRow"></div>
+    <div class="fbar" id="fbar">
+      <div class="sw"><span class="si">🔍</span><input class="sinput" id="srch" placeholder="Search filings, IDs, descriptions…" oninput="applyFilters()"></div>
+      <select class="fsel" id="agFil" onchange="applyFilters()"><option value="all">All Agencies</option></select>
+      <select class="fsel" id="stFil" onchange="applyFilters()">
+        <option value="all">All Statuses</option>
+        <option value="overdue">Overdue</option>
+        <option value="due-soon">Due This Week</option>
+        <option value="upcoming">Next 30 Days</option>
+        <option value="complete">Complete</option>
+        <option value="inprog">In Progress</option>
+        <option value="ongoing">Ongoing</option>
+        <option value="event">Event-Driven</option>
+      </select>
+      <label class="arc-tog"><input type="checkbox" id="showArch" onchange="applyFilters()"> Show archived</label>
+    </div>
+    <div class="tbl-wrap" id="tbl"></div>
+    <div id="archView" style="display:none"></div>
+  </div>
+  <div class="side" id="side"></div>
+</div>
+
+<!-- Add/Edit Modal -->
+<div class="mover hide" id="addModal">
+  <div class="modal">
+    <div class="mhdr"><div class="mtitle" id="mTitle">Add Filing</div><button class="dp-close" onclick="closeModal()">✕</button></div>
+    <div class="mbody" id="mBody"></div>
+    <div class="mfooter"><button class="btn btn-s" onclick="closeModal()">Cancel</button><button class="btn btn-p" id="mSaveBtn" onclick="saveModal()">Save Filing</button></div>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+// FILING DATA
+// ─────────────────────────────────────────────
+const FILINGS_INIT = [
+// ── PUCT / Texas ──
+{id:'TX-01',market:'Texas',agency:'PUCT',title:'Annual Financial Report (Option 1 REPs)',frequency:'Annual',ft:'annual',month:3,day:15,owner:'Carter Copeland',priority:'critical',citation:'16 TAC 25.107(i)',desc:'Annual financial report for Option 1 REPs including balance sheet, income statement, and cash flow statement. Filed with PUCT via the Interchange Filing System. Demonstrates ongoing financial integrity requirements for REP certification.',instr:'',links:[],completions:[],status:'pending',active:true},
+{id:'TX-02',market:'Texas',agency:'PUCT',title:'Semi-Annual Compliance Report (Option 1 REPs)',frequency:'Semi-Annual',ft:'annual',month:9,day:15,owner:'Carter Copeland',priority:'high',citation:'16 TAC 25.107(i)',desc:'Semi-annual compliance report filed approximately 6 months after the annual financial report. Covers ongoing compliance status for Option 1 REPs during the interim period.',instr:'',links:[],completions:[],status:'pending',active:true},
+{id:'TX-03',market:'Texas',agency:'PUCT',title:'Comprehensive Annual Report (Customer Data)',frequency:'Annual',ft:'annual',month:3,day:15,owner:'Carter Copeland',priority:'critical',citation:'16 TAC 25.491(a)-(e)',desc:'Annual report on customer data metrics including number of customers served by rate class, complaints received, disconnections, and other PUCT-required data points. Filed by March 15 each year.',instr:'',links:[],completions:[],status:'pending',active:true},
+{id:'TX-04',market:'Texas',agency:'PUCT',title:'REC Compliance Report',frequency:'Annual',ft:'annual',month:3,day:15,owner:'Carter Copeland',priority:'high',citation:'16 TAC 25.107(j)',desc:'Renewable Energy Certificate (REC) compliance report demonstrating REC obligations have been met for the prior compliance year. Coordinate with ERCOT REC program data. Filed with PUCT by March 15.',instr:'',links:[],completions:[],status:'pending',active:true},
+{id:'TX-05',market:'Texas',agency:'PUCT',title:'Letter of Credit Maintenance',frequency:'Ongoing',ft:'ongoing',month:null,day:null,owner:'Finance',priority:'critical',citation:'16 TAC 25.107(f)(1)(B)',desc:'Continuous maintenance of the required letter of credit or surety bond with PUCT. Must ensure LOC/bond remains current, adequate in amount, and never lapses. Any upcoming expiration triggers the OO-04 90-day notice requirement.',instr:'',links:[],completions:[],status:'ongoing',active:true},
+{id:'TX-06',market:'Texas',agency:'PUCT',title:'Electricity Facts Label (EFL) Filing',frequency:'Per Product Launch',ft:'event_driven',month:null,day:null,owner:'Regulatory',priority:'high',citation:'16 TAC 25.475',desc:'EFL must be filed with PUCT prior to offering any new electricity product to customers. Also required when existing product terms change materially. Filed via PUCT Interchange Filing System before product launch.',instr:'',links:[],completions:[],status:'ongoing',active:true},
+{id:'TX-07',market:'Texas',agency:'PUCT',title:'Terms of Service (ToS) Filing',frequency:'Per Product Launch',ft:'event_driven',month:null,day:null,owner:'Regulatory',priority:'high',citation:'16 TAC 25.474',desc:'Terms of Service document must be filed with PUCT for each new product offering or when material changes occur. Must be provided to customers prior to or at the time of enrollment.',instr:'',links:[],completions:[],status:'ongoing',active:true},
+{id:'TX-08',market:'Texas',agency:'PUCT',title:'Your Rights as a Customer (YRAC) Filing',frequency:'Per Product Launch',ft:'event_driven',month:null,day:null,owner:'Regulatory',priority:'high',citation:'16 TAC 25.474',desc:'YRAC document must be provided to all residential and small commercial customers. Updated when PUCT rules change or when new product offerings are launched. Keep current version on file.',instr:'',links:[],completions:[],status:'ongoing',active:true},
+{id:'TX-09',market:'Texas',agency:'PUCT',title:'Customer Complaint Response (PUCT)',frequency:'Per Complaint',ft:'event_driven',month:null,day:null,dln:'15 days from complaint receipt',owner:'Customer Ops',priority:'high',citation:'16 TAC 25.485',desc:'Formal complaints forwarded by PUCT must be responded to within 15 days. Maintain a log of all PUCT-forwarded complaints, response dates, and resolution outcomes.',instr:'',links:[],completions:[],status:'ongoing',active:true},
+{id:'TX-10',market:'Texas',agency:'PUCT',title:'Material Change Amendment',frequency:'Event-Driven',ft:'event_driven',month:null,day:null,dln:'10 working days from change',owner:'Regulatory',priority:'critical',citation:'16 TAC 25.107',desc:'Any material change to REP certification information must be reported to PUCT within 10 working days. This includes ownership changes, key personnel changes, financial changes, and changes to the LOC/bond.',instr:'',links:[],completions:[],status:'ongoing',active:true},
+{id:'TX-11',market:'Texas',agency:'PUCT',title:'Record Retention Compliance',frequency:'Ongoing',ft:'ongoing',month:null,day:null,owner:'Carter Copeland',priority:'medium',citation:'16 TAC 25.107',desc:'Maintain all customer records, contracts, complaints, billing records, and regulatory correspondence for a minimum of 2 years as required by PUCT rules. Records must be accessible for audit or regulatory review.',instr:'',links:[],completions:[],status:'ongoing',active:true},
+{id:'TX-12',market:'Texas',agency:'PUCT',title:'TX Secretary of State — Active Registration',frequency:'Ongoing',ft:'ongoing',month:null,day:null,owner:'Carter Copeland',priority:'high',citation:'TX Bus. Orgs. Code',desc:'Maintain active foreign or domestic registration with Texas SOS. Keep registered agent information current. Annual franchise tax and PIR due May 15 (see SOS-02 and SOS-06). Ensure no lapse in good standing.',instr:'',links:[],completions:[],status:'ongoing',active:true},
+{id:'TX-13',market:'Texas',agency:'PUCT',title:'Customer Acquisition / Transfer Notice',frequency:'Event-Driven',ft:'event_driven',month:null,day:null,owner:'Carter Copeland',priority:'medium',citation:'16 TAC 25.107',desc:'Notice requirements when acquiring or transferring a significant block of customer accounts. Timing and form depend on transaction specifics. Coordinate with PUCT staff before any major customer portfolio transaction.',instr:'',links:[],completions:[],status:'ongoing',active:true},
+{id:'TX-14',market:'Texas',agency:'PUCT',title:'Prepaid Service Notice (if applicable)',frequency:'Event-Driven',ft:'event_driven',month:null,day:null,owner:'Carter Copeland',priority:'medium',citation:'16 TAC 25.498',desc:'If Base Power offers any prepaid electricity products, specific disclosure and customer notice requirements apply under PUCT Rule 25.498. Review applicability if prepaid products are introduced.',instr:'',links:[],completions:[],status:'ongoing',active:true},
+{id:'TX-15',market:'Texas',agency:'PUCT',title:'Retail Market Performance Measure Report (§25.88)',frequency:'Quarterly',ft:'qoffset',offsetDays:45,owner:'Regulatory',priority:'critical',citation:'16 TAC §25.88 (eff. 04.02.2026)',desc:'NEW rule effective April 2, 2026. Quarterly Retail Market Performance Measures report filed with PUCT no later than 45 days after the end of each quarterly period (Jan 1, Apr 1, Jul 1, Oct 1). Begins with Q2 2026 — first filing due August 14, 2026. Report covers: (1) Competitive market indicators; (2) Technical market mechanics; (3) Field performance statistics. Each submission must include analysis of any measure not meeting expected performance levels, plus a signed and notarized affidavit by an executive officer per §25.107. Supporting documents must be retained for 24 months. PUCT may impose administrative penalties under §22.246 for failure to timely file.',dln:'45 days after quarter end — first due Aug 14, 2026 (Q2)',instr:'1. Obtain PUCT-prescribed filing forms when published.\n2. Collect data for all three performance measure categories each quarter.\n3. For any measure below expected performance level, prepare written analysis of the change vs. prior quarter and contributing circumstances.\n4. Have an executive officer sign and notarize the report attestation affidavit per §25.107.\n5. File electronically via PUCT Interchange Filing System in native file format.\n6. Retain all supporting records and documentation for 24 months after each report date.',links:[{label:'PUCT Interchange Filing System',url:'https://interchange.puc.texas.gov/'},{label:'PUCT Chapter 25 Rules',url:'https://www.puc.texas.gov/agency/rulesnlaws/subrules/electric/ch25complete.pdf'}],completions:[],status:'pending',active:true},
+
+// ── ERCOT ──
+{id:'ER-01',market:'Texas',agency:'ERCOT',title:'Annual Officer Certification',frequency:'Annual',ft:'annual',month:4,day:30,owner:'Regulatory',priority:'critical',citation:'ERCOT Protocols §16.11.6',desc:'Annual officer certification required for all ERCOT Market Participants. Must be signed by an authorized officer of the company certifying compliance with ERCOT Nodal Protocols. Due April 30 each year.',instr:'',links:[],completions:[],status:'pending',active:true},
+{id:'ER-02',market:'Texas',agency:'ERCOT',title:'Audited Financial Statements & Risk Certification',frequency:'Annual',ft:'annual',month:4,day:30,owner:'Finance',priority:'critical',citation:'ERCOT Protocols §16.11.6',desc:'Annual submission of CPA-audited financial statements and risk certification to ERCOT by April 30. Financial statements must be audited by a qualified independent CPA firm. Risk certification covers trading and credit risk management.',instr:'',links:[],completions:[],status:'pending',active:true},
+{id:'ER-03',market:'Texas',agency:'ERCOT',title:'Credit Limit / TPE Compliance',frequency:'Ongoing',ft:'ongoing',month:null,day:null,owner:'Finance',priority:'critical',citation:'ERCOT Protocols §16.11.5',desc:'Continuous monitoring and maintenance of credit exposure against ERCOT Transmission-related, Portfolio, and Exposure (TPE) limits. Post additional collateral if exposure approaches limits. Monitor daily.',instr:'',links:[],completions:[],status:'ongoing',active:true},
+{id:'ER-04',market:'Texas',agency:'ERCOT',title:'EFL Renewable Content Update',frequency:'Annual',ft:'annual',month:7,day:1,owner:'Regulatory',priority:'high',citation:'ERCOT Protocols',desc:'Annual update to EFL renewable content information as of July 1. Reflects the previous calendar year\'s renewable energy mix and REC retirement data. Must coordinate with PUCT EFL filing (TX-06) to ensure consistency.',instr:'',links:[],completions:[],status:'pending',active:true},
+{id:'ER-05',market:'Texas',agency:'ERCOT',title:'Responsive Device Program Data (Quarterly)',frequency:'Quarterly',ft:'qoffset',offsetDays:45,owner:'Operations',priority:'high',citation:'ERCOT Protocols',desc:'Quarterly submission of responsive device program data to ERCOT. Due 45 days after quarter end: Q1→May 15, Q2→Aug 14, Q3→Nov 14, Q4→Feb 14. Required for demand response program participation tracking.',dln:'45 days after quarter end (Q1: May 15)',instr:'',links:[],completions:[],status:'pending',active:true},
+{id:'ER-06',market:'Texas',agency:'ERCOT',title:'Annual DR Survey Confirmation',frequency:'Annual (2 deadlines)',ft:'annual',month:8,day:15,owner:'Operations',priority:'high',citation:'ERCOT Protocols',desc:'Two-part annual filing: (1) Confirm DR program participation by Aug 15; (2) Submit full list of participating ESI IDs by Oct 15. Required for all market participants enrolled in ERCOT demand response programs.',dln:'Aug 15 (confirm) + Oct 15 (ESI IDs)',instr:'',links:[],completions:[],status:'pending',active:true},
+{id:'ER-07',market:'Texas',agency:'ERCOT',title:'Contact Information Updates',frequency:'Event-Driven',ft:'event_driven',month:null,day:null,dln:'5 business days from any change',owner:'Regulatory',priority:'medium',citation:'ERCOT Protocols §16.11.2',desc:'Any changes to key contact information (emergency contacts, billing contacts, authorized representatives) must be reported to ERCOT within 5 business days of the change via the ERCOT registration portal.',instr:'',links:[],completions:[],status:'ongoing',active:true},
+{id:'ER-08',market:'Texas',agency:'ERCOT',title:'QSE Relationship Maintenance',frequency:'Ongoing',ft:'ongoing',month:null,day:null,owner:'Operations',priority:'high',citation:'ERCOT Protocols §16',desc:'Maintain active and current QSE (Qualified Scheduling Entity) agreement. Ensure QSE is correctly scheduling load, the QSE relationship does not lapse, and QSE has current authorization to act on behalf of Base Power.',instr:'',links:[],completions:[],status:'ongoing',active:true},
+{id:'ER-09',market:'Texas',agency:'ERCOT',title:'ADER Telemetry (if participating)',frequency:'Continuous',ft:'ongoing',month:null,day:null,owner:'Engineering',priority:'high',citation:'ERCOT ADER Pilot',desc:'If Base Power participates in the ERCOT Aggregated Distributed Energy Resource (ADER) Phase 3 pilot, real-time telemetry data must be provided at 2-second intervals. Requires reliable communication infrastructure.',instr:'',links:[{label:'ERCOT ADER Pilot Program',url:'https://www.ercot.com/mktrules/pilots/ader'}],completions:[],status:'ongoing',active:true},
+{id:'ER-10',market:'Texas',agency:'ERCOT',title:'Settlement Metering Compliance',frequency:'Ongoing',ft:'ongoing',month:null,day:null,owner:'Operations',priority:'medium',citation:'ERCOT Protocols §10',desc:'Ensure all settlement metering (interval data, meter reading, and reporting) complies with ERCOT Section 10 requirements. Monitor data quality, verify readings against expectations, and respond to settlement disputes promptly.',instr:'',links:[],completions:[],status:'ongoing',active:true},
+
+// ── Emergency Operations Plan ──
+{id:'EO-01',market:'Texas',agency:'EOP',title:'Emergency Operations Plan (EOP) — Annual Update',frequency:'Annual',ft:'annual',month:3,day:15,owner:'Regulatory',priority:'critical',citation:'16 TAC 25.52; ERCOT Protocols',desc:'Annual update and resubmission of the Emergency Operations Plan by March 15. Dual filing required: (1) unredacted version to ERCOT; (2) redacted version to PUCT via Interchange Filing System. Must reflect current personnel, procedures, and operational capabilities.',instr:'',links:[],completions:[],status:'pending',active:true},
+{id:'EO-02',market:'Texas',agency:'EOP',title:'EOP Annual Emergency Drill',frequency:'Annual',ft:'annual',month:12,day:31,owner:'Operations',priority:'high',citation:'16 TAC 25.52',desc:'Annual emergency operations drill must be conducted and documented before December 31. PUCT must be given 30 days advance written notice before the drill date. Document all results, gaps identified, and corrective actions taken.',dln:'Before Dec 31; 30-day PUCT advance notice required',instr:'',links:[],completions:[],status:'pending',active:true},
+{id:'EO-03',market:'Texas',agency:'EOP',title:'EOP Initial Filing (New REP Certification)',frequency:'One-Time',ft:'event_driven',month:null,day:null,dln:'Within 10 days of PUCT certification',owner:'Regulatory',priority:'critical',citation:'16 TAC 25.52',desc:'One-time initial EOP filing due within 10 days of receiving PUCT REP certification. Track for any new subsidiary or affiliate REP certifications. This item is likely already complete for Base Power\'s existing certification.',instr:'',links:[],completions:[],status:'ongoing',active:true},
+
+// ── Texas One-Offs (note: TX franchise tax and unclaimed property removed — handled outside this tracker) ──
+
+// ── Texas One-Offs ──
+{id:'OO-01',market:'Texas',agency:'PUCT',title:'Rate Change Customer Notice',frequency:'Event-Driven',ft:'event_driven',month:null,day:null,dln:'14 days advance written notice to customers',owner:'Regulatory',priority:'high',citation:'16 TAC 25.475',desc:'When changing rates or pricing for existing fixed-price customers, must provide at least 14 days advance written notice. Notice must include the new rate, effective date, and customer\'s rights to switch providers.',instr:'',links:[],completions:[],status:'ongoing',active:true},
+{id:'OO-02',market:'Texas',agency:'PUCT',title:'Contract Expiration Notice',frequency:'Event-Driven',ft:'event_driven',month:null,day:null,dln:'30 days before contract expiration',owner:'Regulatory',priority:'high',citation:'16 TAC 25.474',desc:'Must notify customers at least 30 days before their fixed-price contract expires. Notice must clearly describe renewal options, default product terms, and the customer\'s right to shop for a new provider.',instr:'',links:[],completions:[],status:'ongoing',active:true},
+{id:'OO-03',market:'Texas',agency:'PUCT',title:'Cessation of Operations Notice',frequency:'Event-Driven',ft:'event_driven',month:null,day:null,dln:'Immediately upon decision',owner:'Regulatory',priority:'critical',citation:'16 TAC 25.107(n)',desc:'If Base Power decides to cease operations as a REP in Texas, PUCT must be notified immediately upon making that decision. PUCT will coordinate the customer transfer process and wind-down procedures.',instr:'',links:[],completions:[],status:'ongoing',active:true},
+{id:'OO-04',market:'Texas',agency:'PUCT',title:'Letter of Credit Expiration Notice',frequency:'Event-Driven',ft:'event_driven',month:null,day:null,dln:'90 days before LOC expiration',owner:'Finance',priority:'critical',citation:'16 TAC 25.107(f)',desc:'Must notify PUCT at least 90 days before the Letter of Credit or surety bond expires to allow sufficient time for renewal. Failure to maintain a current LOC can result in suspension of REP certification.',instr:'',links:[],completions:[],status:'ongoing',active:true},
+{id:'OO-08',market:'Texas',agency:'ERCOT',title:'Notice of Change of Affiliates (ERCOT)',frequency:'Event-Driven',ft:'event_driven',month:null,day:null,dln:'Timely upon any change',owner:'Regulatory',priority:'high',citation:'ERCOT Protocols §16.11.2',desc:'Must notify ERCOT of any material changes in affiliate relationships on a timely basis. Affiliate changes may trigger updated Standards of Conduct obligations or require amendments to existing market participant agreements.',instr:'',links:[],completions:[],status:'ongoing',active:true},
+{id:'OO-09',market:'Texas',agency:'ERCOT',title:'LSIPA Attestation / Section 23 Form S',frequency:'Per ERCOT Schedule',ft:'event_driven',month:null,day:null,dln:'Per ERCOT published deadlines',owner:'Regulatory',priority:'high',citation:'ERCOT Protocols',desc:'Load Serving Integrated Planning Agreement (LSIPA) attestation and Section 23 Form S submissions per ERCOT-published deadlines. Monitor ERCOT communications for specific submission dates each year.',instr:'',links:[],completions:[],status:'ongoing',active:true},
+{id:'OO-10',market:'Texas',agency:'ERCOT',title:'Forced Outage Reporting (ERCOT)',frequency:'Event-Driven',ft:'event_driven',month:null,day:null,dln:'Within 60 minutes of outage',owner:'Operations',priority:'critical',citation:'ERCOT Protocols §9',desc:'Any forced outage affecting ERCOT settlement obligations must be reported through the ERCOT portal within 60 minutes of occurrence. Include outage details, affected ESI IDs, cause, and estimated restoration time.',instr:'',links:[],completions:[],status:'ongoing',active:true},
+
+// ── Illinois ICC (ARES) ──
+{id:'IL-01',market:'Illinois',agency:'ICC',title:'Part 451 Continuing Compliance Report',frequency:'Annual',ft:'annual',month:4,day:30,owner:'Regulatory',priority:'critical',citation:'83 Ill. Admin. Code §451',desc:'Annual continuing compliance report filed with Illinois Commerce Commission by April 30. Demonstrates ongoing compliance with ARES certification requirements including financial, operational, and marketing standards.',instr:'',links:[{label:'ICC ARES Authority',url:'https://www.icc.illinois.gov/authority/alternative-retail-electric-suppliers'},{label:'Part 451 Rules',url:'https://regulations.justia.com/states/illinois/title-83/part-451/'}],completions:[],status:'pending',active:true},
+{id:'IL-02',market:'Illinois',agency:'ICC',title:'Rates Charged to Residential Customers',frequency:'Annual',ft:'annual',month:4,day:30,owner:'Regulatory',priority:'high',citation:'83 Ill. Admin. Code §412',desc:'Annual report of rates charged to Illinois residential customers filed with ICC by April 30. Includes required pricing data and rate comparison information under ARES obligations.',instr:'',links:[{label:'Part 412 Rules',url:'https://www.icc.illinois.gov/ICC-Authority/Admin-Code/083/412/'}],completions:[],status:'pending',active:true},
+{id:'IL-03',market:'Illinois',agency:'ICC',title:'Financial Reporting (ICC)',frequency:'Annual',ft:'annual',month:4,day:30,owner:'Finance',priority:'critical',citation:'83 Ill. Admin. Code §451',desc:'Annual financial reporting to ICC. Credit-rated entities file ratings by April 30; audited financial statements due within 120 days of fiscal year end. Confirm current requirements with ICC staff each year.',instr:'',links:[],completions:[],status:'pending',active:true},
+{id:'IL-04',market:'Illinois',agency:'ICC',title:'RPS Compliance Report (ICC)',frequency:'Annual',ft:'annual',month:9,day:1,owner:'Regulatory',priority:'high',citation:'220 ILCS 5/16-115D',desc:'Annual Renewable Portfolio Standard (RPS) compliance report filed with ICC by September 1. Must demonstrate renewable energy procurement meets the required Illinois RPS percentage for the compliance year.',instr:'',links:[],completions:[],status:'pending',active:true},
+{id:'IL-05',market:'Illinois',agency:'ICC',title:'Environmental Disclosure Report (Quarterly)',frequency:'Quarterly',ft:'qfixed',q1:{m:4,d:30},q2:{m:7,d:31},q3:{m:10,d:31},q4:{m:1,d:31},owner:'Regulatory',priority:'high',citation:'83 Ill. Admin. Code §412',desc:'Quarterly environmental disclosure report filed with ICC. Covers fuel mix and emissions data for electricity supplied. Q1: Apr 30 | Q2: Jul 31 | Q3: Oct 31 | Q4: Jan 31.',dln:'Q1: Apr 30 | Q2: Jul 31 | Q3: Oct 31 | Q4: Jan 31',instr:'',links:[],completions:[],status:'pending',active:true},
+{id:'IL-06',market:'Illinois',agency:'ICC',title:'Surety Bond Maintenance (ICC)',frequency:'Ongoing',ft:'ongoing',month:null,day:null,owner:'Finance',priority:'critical',citation:'83 Ill. Admin. Code §451',desc:'Continuous maintenance of required surety bond or letter of credit with ICC. Monitor bond renewal dates, ensure adequate coverage levels, and never allow a lapse. Bond failure can result in ARES certification suspension.',instr:'',links:[],completions:[],status:'ongoing',active:true},
+{id:'IL-07',market:'Illinois',agency:'ICC',title:'Informal Complaint Response (ICC)',frequency:'Per Complaint',ft:'event_driven',month:null,day:null,dln:'14 days from complaint receipt',owner:'Customer Ops',priority:'high',citation:'83 Ill. Admin. Code §280',desc:'Informal complaints forwarded by ICC must be responded to within 14 days. Maintain a complaint log. Formal complaints may require hearing participation and more extensive responses.',instr:'',links:[],completions:[],status:'ongoing',active:true},
+{id:'IL-08',market:'Illinois',agency:'ICC',title:'Telemarketing Call Recording Retention',frequency:'Ongoing',ft:'ongoing',month:null,day:null,owner:'Compliance',priority:'high',citation:'83 Ill. Admin. Code §412',desc:'All telemarketing sales calls in Illinois must be recorded and retained per ICC requirements. Maintain recording system compliance, retention schedule, and ensure recordings are available to ICC upon request.',instr:'',links:[],completions:[],status:'ongoing',active:true},
+{id:'IL-09',market:'Illinois',agency:'ICC',title:'Marketing Materials Compliance',frequency:'Ongoing',ft:'ongoing',month:null,day:null,owner:'Marketing',priority:'high',citation:'83 Ill. Admin. Code §412',desc:'All Illinois marketing materials must comply with ICC disclosure requirements before use. Include required disclosures on pricing methodology, contract terms, cancellation rights, and customer protections.',instr:'',links:[],completions:[],status:'ongoing',active:true},
+{id:'IL-10',market:'Illinois',agency:'ICC',title:'UDS / Sales Contract Compliance',frequency:'Per Contract',ft:'event_driven',month:null,day:null,owner:'Regulatory',priority:'high',citation:'83 Ill. Admin. Code §412',desc:'All Uniform Disclosure Statements (UDS) and sales contracts must comply with ICC requirements. Ensure UDS is provided to customers at the time of sale with all required disclosures, cancellation rights, and terms.',instr:'',links:[],completions:[],status:'ongoing',active:true},
+{id:'IL-11',market:'Illinois',agency:'ICC',title:'Customer Account Transfer Report (ICC)',frequency:'Event-Driven',ft:'event_driven',month:null,day:null,dln:'30 days after transaction',owner:'Regulatory',priority:'medium',citation:'83 Ill. Admin. Code §451',desc:'Report any customer account transfers (acquisitions or divestitures) to ICC within 30 days of the transaction closing. Required when acquiring or divesting a significant block of Illinois customer accounts.',instr:'',links:[],completions:[],status:'ongoing',active:true},
+{id:'IL-12',market:'Illinois',agency:'ICC',title:'ARES Filing Information Update',frequency:'Event-Driven',ft:'event_driven',month:null,day:null,dln:'10 business days after change',owner:'Regulatory',priority:'medium',citation:'83 Ill. Admin. Code §451',desc:'Must update ARES certification information with ICC within 10 business days of any material change to company information, ownership, key personnel, or operational details.',instr:'',links:[],completions:[],status:'ongoing',active:true},
+{id:'IL-13',market:'Illinois',agency:'ICC',title:'Credit Agreement Change Notice',frequency:'Event-Driven',ft:'event_driven',month:null,day:null,dln:'15 days advance notice required',owner:'Finance',priority:'high',citation:'83 Ill. Admin. Code §451',desc:'Must provide ICC at least 15 days advance notice before any change to the credit agreement, surety bond, or other financial assurance mechanism supporting ARES certification.',instr:'',links:[],completions:[],status:'ongoing',active:true},
+{id:'IL-14',market:'Illinois',agency:'ICC',title:'Designated Agent Report — Annual Filing',frequency:'Annual',ft:'annual',month:1,day:31,owner:'Regulatory',priority:'high',citation:'83 Ill. Adm. Code 215.10(a)',desc:'Annual Designated Agent (DA) report filed with ICC between January 1 and January 31 each year. Confirms or updates the identity and contact information of the company\'s designated agent on file with the Commission. Required for all ARES. Cover letter and verification page with original signatures required. Must match company name exactly as it appears on the ICC Public Utility Database.',dln:'Annually — January 1 through January 31',instr:'1. Confirm current DA information on file with ICC via the entity profile page.\n2. If DA is unchanged, file confirmation of existing DA.\n3. If DA has changed, use the change-based report (IL-15) instead.\n4. Include cover letter on company letterhead with company full name (including any DBAs) and citation to 83 Ill. Adm. Code 215.10(a).\n5. Include verification page with original signatures.\n6. File by mail to: Chief Clerk\'s Office, Illinois Commerce Commission, 527 E. Capitol Ave., Springfield, IL 62701 — or electronically if authorized.',links:[{label:'ICC ARES Webpage',url:'https://icc.illinois.gov/authority/alternative-retail-electric-suppliers'},{label:'83 Ill. Adm. Code 215 Instructions',url:'https://icc.illinois.gov/authority/alternative-retail-electric-suppliers'}],completions:[],status:'pending',active:true},
+{id:'IL-15',market:'Illinois',agency:'ICC',title:'Designated Agent Report — Change Filing',frequency:'Event-Driven',ft:'event_driven',month:null,day:null,dln:'15 days after any change to the Designated Agent',owner:'Regulatory',priority:'high',citation:'83 Ill. Adm. Code 215.50',desc:'Must file an updated Designated Agent report with ICC within 15 days of any change to the company\'s Designated Agent (DA). The DA is the individual authorized to receive official ICC communications on behalf of the company. Cover letter and verification page with original signatures required.',dln:'15 days after any change to the Designated Agent',instr:'1. When a DA change occurs, promptly prepare the updated Designated Agent Report.\n2. Include cover letter on company letterhead citing 83 Ill. Adm. Code 215.50.\n3. Include verification page with original signatures.\n4. File within 15 days of the change.',links:[{label:'ICC ARES Webpage',url:'https://icc.illinois.gov/authority/alternative-retail-electric-suppliers'}],completions:[],status:'ongoing',active:true},
+{id:'IL-16',market:'Illinois',agency:'ICC',title:'Call Center Information Report',frequency:'Annual',ft:'annual',month:3,day:1,owner:'Operations',priority:'high',citation:'83 Ill. Adm. Code 410.45(c); 220 ILCS 5/16-123',desc:'Annual report of call center information filed with ICC by March 1. Reports details on the ARES customer call center including location, hours of operation, staffing, and performance metrics. Required for all ARES serving Illinois retail customers.',dln:'Annually by March 1',instr:'1. Collect call center information: location(s), hours of operation, number of customer service representatives, average wait times, call volume data.\n2. Prepare report in ICC-required format.\n3. Include cover letter citing 83 Ill. Adm. Code 410.45(c) and 220 ILCS 5/16-123.\n4. File by March 1 with ICC Chief Clerk\'s Office.',links:[{label:'ICC ARES Webpage',url:'https://icc.illinois.gov/authority/alternative-retail-electric-suppliers'}],completions:[],status:'pending',active:true},
+{id:'IL-17',market:'Illinois',agency:'ICC',title:'Conduct, Training and Compliance of RES Agents Certification',frequency:'Occurrence-Based',ft:'event_driven',month:null,day:null,dln:'Upon occurrence / when required',owner:'Compliance',priority:'high',citation:'83 Ill. Adm. Code 412.170(e)',desc:'Certification of conduct, training, and compliance of retail energy supplier (RES) agents/sales representatives. Filed on an occurrence basis — required when certifying that sales agents have completed required training and comply with ICC marketing and sales conduct standards. File electronically via ICC portal.',instr:'1. Ensure all RES agents complete required ICC training per 83 Ill. Adm. Code 412.170.\n2. Prepare certification documenting training completion and compliance.\n3. File electronically via ICC portal (requires External User Account — see ARES FAQ).\n4. Retain training records for all agents.',links:[{label:'ICC ARES Filing Portal',url:'https://icc.illinois.gov/authority/alternative-retail-electric-suppliers'}],completions:[],status:'ongoing',active:true},
+{id:'IL-18',market:'Illinois',agency:'ICC',title:'Bill Format Filing',frequency:'Occurrence-Based',ft:'event_driven',month:null,day:null,dln:'Upon any new or changed bill format',owner:'Regulatory',priority:'high',citation:'83 Ill. Adm. Code 412.310(a)(1)',desc:'File bill format with ICC on an occurrence basis — required when introducing a new bill format or making material changes to an existing bill format. Ensures ARES bills comply with ICC required disclosure and format requirements. File electronically via ICC portal.',instr:'1. Before deploying any new or materially changed bill format, prepare the filing.\n2. Ensure bill format complies with all ICC disclosure requirements under 83 Ill. Adm. Code 412.\n3. File electronically via ICC portal prior to use.\n4. Retain copy of all filed bill formats.',links:[{label:'ICC ARES Filing Portal',url:'https://icc.illinois.gov/authority/alternative-retail-electric-suppliers'}],completions:[],status:'ongoing',active:true},
+{id:'IL-19',market:'Illinois',agency:'ICC',title:'Customer Complaint and Resolution Procedures Filing',frequency:'Occurrence-Based',ft:'event_driven',month:null,day:null,dln:'Upon any new or changed procedures',owner:'Compliance',priority:'high',citation:'83 Ill. Adm. Code 412.310(a)(3)',desc:'File customer complaint and resolution procedures with ICC on an occurrence basis — required when establishing new or materially updating existing customer complaint handling procedures. Distinct from IL-07 (responding to individual ICC-forwarded complaints). This is the filing of the procedures document itself. File electronically via ICC portal.',instr:'1. Maintain written customer complaint and resolution procedures that comply with 83 Ill. Adm. Code 412.\n2. File procedures with ICC via electronic portal whenever established or materially changed.\n3. Ensure procedures cover: complaint intake, investigation, response timelines, and escalation to ICC.',links:[{label:'ICC ARES Filing Portal',url:'https://icc.illinois.gov/authority/alternative-retail-electric-suppliers'}],completions:[],status:'ongoing',active:true},
+{id:'IL-20',market:'Illinois',agency:'ICC',title:'Customer Service Representative for Commission Employees',frequency:'Occurrence-Based',ft:'event_driven',month:null,day:null,dln:'Upon designation or any change',owner:'Regulatory',priority:'medium',citation:'83 Ill. Adm. Code 412.310(a)(4)',desc:'Filing to designate and keep current the Customer Service Representative (CSR) contact for ICC staff — a specific point of contact at the ARES who ICC employees can reach for customer-related inquiries. File when first designating the CSR and upon any change to that designation. File electronically via ICC portal.',instr:'1. Designate a specific customer service representative as the ICC staff contact.\n2. File the designation via ICC electronic portal.\n3. Update within a reasonable time whenever the designated CSR changes.',links:[{label:'ICC ARES Filing Portal',url:'https://icc.illinois.gov/authority/alternative-retail-electric-suppliers'}],completions:[],status:'ongoing',active:true},
+{id:'IL-21',market:'Illinois',agency:'ICC',title:'ARES Kilowatt-Hour Report (Annual)',frequency:'Annual',ft:'annual',month:3,day:1,owner:'Operations',priority:'high',citation:'83 Ill. Adm. Code 451.770',desc:'Annual report of total kilowatt-hours delivered and sold by the ARES in Illinois during the prior calendar year. Filed with ICC by March 1. Used for RPS compliance calculations and market reporting. File using the ICC Annual Kilowatt-hour Report Form.',dln:'Annually by March 1',instr:'1. Compile total kWh delivered and sold in Illinois for the prior calendar year from settlement data.\n2. Break down by customer class if required by current form.\n3. Complete the ICC Annual Kilowatt-hour Report Form.\n4. Include cover letter citing 83 Ill. Adm. Code 451.770.\n5. File with ICC Chief Clerk\'s Office by March 1.',links:[{label:'ICC ARES Webpage — KWh Report Form',url:'https://icc.illinois.gov/authority/alternative-retail-electric-suppliers'}],completions:[],status:'pending',active:true},
+{id:'IL-22',market:'Illinois',agency:'ICC',title:'Net Metering Report',frequency:'Annual',ft:'annual',month:4,day:1,owner:'Regulatory',priority:'medium',citation:'83 Ill. Adm. Code 465.40',desc:'Annual net metering report filed electronically with ICC by April 1. Reports on net metering customers served during the prior year. Required for ARES with net metering customers in Illinois. If Base Power has no net metering customers, confirm whether a zero/null filing is still required.',dln:'Annually by April 1',instr:'1. Identify all net metering customers served in Illinois during the prior calendar year.\n2. Compile required data per 83 Ill. Adm. Code 465.40.\n3. File electronically via ICC portal by April 1.\n4. If no net metering customers, confirm with ICC whether a nil report is required.',links:[{label:'ICC Net Metering Filing Portal',url:'https://icc.illinois.gov/authority/alternative-retail-electric-suppliers'}],completions:[],status:'pending',active:true},
+{id:'IL-23',market:'Illinois',agency:'ICC',title:'Municipal Aggregation Program Information',frequency:'Occurrence-Based',ft:'event_driven',month:null,day:null,dln:'Within 3 business days of final program determination or customer disclosures',owner:'Regulatory',priority:'medium',citation:'83 Ill. Adm. Code 470.200',desc:'File municipal aggregation program information with ICC within 3 business days of a program being determined final and made public, but no later than 3 business days after customer disclosures are sent. Required if Base Power participates in any Illinois municipal aggregation programs. Use the Municipal Aggregation Template.',dln:'3 business days after program finalized or customer disclosures sent (whichever is earlier)',instr:'1. When participating in a municipal aggregation program, track when the program is determined final and when customer disclosures are sent.\n2. File program information using the ICC Municipal Aggregation Template.\n3. File within 3 business days of the earlier of: program finalization or customer disclosure mailing.\n4. View existing municipal aggregation list on ICC website to confirm current programs.',links:[{label:'ICC Municipal Aggregation Information',url:'https://icc.illinois.gov/authority/alternative-retail-electric-suppliers'}],completions:[],status:'ongoing',active:true},
+{id:'IL-24',market:'Illinois',agency:'ICC',title:'Rate Report (Annual)',frequency:'Annual',ft:'annual',month:6,day:30,owner:'Regulatory',priority:'high',citation:'220 ILCS 5/16-115A(a)(iii)',desc:'Annual Rate Report filed electronically with ICC by June 30. Reports rates charged to Illinois customers. Uses the ICC Rate Report Template and must include a Rate Report Certified Statement. Distinct from IL-02 (Rates Charged to Residential Customers, April 30) — this is the broader annual rate report required under 220 ILCS 5/16-115A.',dln:'Annually by June 30',instr:'1. Compile rate data for all Illinois customer classes for the reporting period.\n2. Complete the ICC Rate Report Template.\n3. Prepare the Rate Report Certified Statement.\n4. File electronically via ICC portal by June 30.',links:[{label:'ICC Rate Report Filing Portal',url:'https://icc.illinois.gov/authority/alternative-retail-electric-suppliers'}],completions:[],status:'pending',active:true},
+{id:'IL-25',market:'Illinois',agency:'ICC',title:'Training Materials Filing (Annual)',frequency:'Annual',ft:'annual',month:12,day:31,owner:'Compliance',priority:'medium',citation:'220 ILCS 5/16-115A(e)(vi)',desc:'Annual filing of training materials with ICC. Documents that sales and customer service staff have received required training on Illinois customer protection rules, marketing standards, and ARES obligations. No specific due date stated — file annually. File electronically via ICC portal.',dln:'Annually (specific date not prescribed — file by year-end)',instr:'1. Compile training materials used for sales agent and customer service training during the year.\n2. Ensure materials cover required topics under 220 ILCS 5/16-115A(e)(vi).\n3. File electronically via ICC portal.\n4. Retain copies of all training materials and attendance records.',links:[{label:'ICC ARES Filing Portal',url:'https://icc.illinois.gov/authority/alternative-retail-electric-suppliers'}],completions:[],status:'pending',active:true},
+{id:'IL-26',market:'Illinois',agency:'ICC',title:'Consumer Education Filing',frequency:'Occurrence-Based',ft:'event_driven',month:null,day:null,dln:'Upon occurrence',owner:'Marketing',priority:'medium',citation:'220 ILCS 5/16-117(g)(4)',desc:'Consumer education materials filed with ICC on an occurrence basis. Required when distributing consumer education materials related to electricity choice, rates, or customer rights in Illinois. File electronically via ICC portal when new consumer education materials are created or distributed.',instr:'1. When creating new consumer education materials for Illinois customers, prepare for ICC filing.\n2. File electronically via ICC portal.\n3. Retain copies of all consumer education materials distributed.',links:[{label:'ICC ARES Filing Portal',url:'https://icc.illinois.gov/authority/alternative-retail-electric-suppliers'}],completions:[],status:'ongoing',active:true},
+{id:'IL-27',market:'Illinois',agency:'ICC',title:'Annual Non-Utility Supplier Diversity Report',frequency:'Annual',ft:'annual',month:6,day:1,owner:'Finance',priority:'medium',citation:'220 ILCS 5/16-111.11',desc:'Annual Non-Utility Supplier Diversity Report filed with ICC by June 1. Reports on the company\'s supplier diversity practices and spend with minority-owned, women-owned, and other diverse businesses. Use the ICC 2026 Non-Utility Supplier Diversity Report Form. File electronically via ICC portal.',dln:'Annually by June 1',instr:'1. Compile supplier diversity spend data for the prior calendar year.\n2. Complete the 2026 Non-Utility Supplier Diversity Report Form (available on ICC ARES webpage).\n3. File electronically via ICC portal by June 1.',links:[{label:'ICC ARES Webpage — Supplier Diversity Forms',url:'https://icc.illinois.gov/authority/alternative-retail-electric-suppliers'}],completions:[],status:'pending',active:true},
+{id:'OO-11',market:'Illinois',agency:'ICC',title:'Customer Account Transfer Report (ICC) — One-Off',frequency:'Event-Driven',ft:'event_driven',month:null,day:null,dln:'30 days after transaction',owner:'Regulatory',priority:'medium',citation:'83 Ill. Admin. Code §451',desc:'File customer account transfer report with ICC within 30 days after any acquisition or divestiture of Illinois customer accounts.',instr:'',links:[],completions:[],status:'ongoing',active:true},
+{id:'OO-12',market:'Illinois',agency:'ICC',title:'ARES Filing Information Update — One-Off',frequency:'Event-Driven',ft:'event_driven',month:null,day:null,dln:'10 business days after change',owner:'Regulatory',priority:'medium',citation:'83 Ill. Admin. Code §451',desc:'Update ARES filing information with ICC within 10 business days of any material change to company information, key personnel, or operational details.',instr:'',links:[],completions:[],status:'ongoing',active:true},
+
+// ── FERC ──
+{id:'FE-01',market:'FERC',agency:'FERC',title:'Electric Quarterly Report (EQR)',frequency:'Quarterly',ft:'qfixed',q1:{m:4,d:30},q2:{m:7,d:31},q3:{m:10,d:31},q4:{m:1,d:31},owner:'Regulatory',priority:'critical',citation:'18 CFR §35.10b',desc:'Quarterly electric sales report filed with FERC. Reports all wholesale electric sales transactions. Q1: Apr 30 | Q2: Jul 31 | Q3: Oct 31 | Q4: Jan 31. Filed via FERC EQR online filing system.',dln:'Q1: Apr 30 | Q2: Jul 31 | Q3: Oct 31 | Q4: Jan 31',instr:'',links:[{label:'FERC EQR Filing Portal',url:'https://www.ferc.gov/power-sales-and-markets/electric-quarterly-reports-eqr'}],completions:[],status:'pending',active:true},
+{id:'FE-02',market:'FERC',agency:'FERC',title:'Notice of Change in Status (Quarterly)',frequency:'Quarterly',ft:'qfixed',q1:{m:4,d:30},q2:{m:7,d:31},q3:{m:10,d:31},q4:{m:1,d:31},owner:'Regulatory',priority:'critical',citation:'18 CFR §35.42',desc:'Quarterly change in status filing with FERC. Must report any changes in status, affiliates, or market conditions that could affect MBR authority. Filed same dates as EQR. Review all affiliates quarterly.',dln:'Q1: Apr 30 | Q2: Jul 31 | Q3: Oct 31 | Q4: Jan 31',instr:'',links:[{label:'FERC MBR Homepage',url:'https://www.ferc.gov/power-sales-and-markets/electric-market-based-rates'}],completions:[],status:'pending',active:true},
+{id:'FE-03',market:'FERC',agency:'FERC',title:'MBR Database Monthly Submission',frequency:'Monthly (if changes)',ft:'monthly',day:15,owner:'Regulatory',priority:'high',citation:'18 CFR §35.42',desc:'Monthly MBR database submission by the 15th of each month — only required if changes occurred. Includes updates to asset appendices, affiliate lists, and market conditions. Skip if no changes.',dln:'15th of each month (only if changes occurred)',instr:'',links:[{label:'FERC MBR Database Portal',url:'https://mbrweb.ferc.gov/'}],completions:[],status:'ongoing',active:true},
+{id:'FE-04',market:'FERC',agency:'FERC',title:'Triennial Market Power Analysis',frequency:'Every 3 Years',ft:'event_driven',month:null,day:null,owner:'Regulatory',priority:'critical',citation:'18 CFR §35.37',desc:'Comprehensive market power analysis filed with FERC every 3 years (required for Category 2 MBR sellers). Analyzes horizontal and vertical market power, pivotal supplier status, and market share. Coordinate with outside regulatory counsel.',instr:'',links:[{label:'FERC Triennial Filing Info',url:'https://www.ferc.gov/power-sales-and-markets/electric-market-based-rates/triennial'}],completions:[],status:'pending',active:true},
+{id:'FE-05',market:'FERC',agency:'FERC',title:'Asset Appendix Maintenance',frequency:'Ongoing',ft:'ongoing',month:null,day:null,owner:'Regulatory',priority:'high',citation:'18 CFR §35.37',desc:'Maintain accurate FERC MBR asset appendices reflecting all generation, transmission, and interconnection assets. Update via eTariff filing when assets are acquired, disposed of, or materially change.',instr:'',links:[],completions:[],status:'ongoing',active:true},
+{id:'FE-06',market:'FERC',agency:'FERC',title:'FERC Annual Charges',frequency:'Annual (per billing)',ft:'event_driven',month:null,day:null,owner:'Finance',priority:'high',citation:'18 CFR §381',desc:'Annual charges billed by FERC for MBR authority. Pay per FERC billing schedule and invoices. Track invoice receipt, due date, and payment confirmation. Late payments may result in penalties.',instr:'',links:[],completions:[],status:'pending',active:true},
+{id:'FE-07',market:'FERC',agency:'FERC',title:'MBR Tariff Compliance',frequency:'Ongoing',ft:'ongoing',month:null,day:null,owner:'Regulatory',priority:'high',citation:'18 CFR §35',desc:'Continuous compliance with FERC Market-Based Rate tariff terms and conditions. Ensure all wholesale transactions are authorized under current tariff. Monitor for tariff amendment needs triggered by business changes.',instr:'',links:[],completions:[],status:'ongoing',active:true},
+{id:'FE-08',market:'FERC',agency:'FERC',title:'Record Retention — 5 Years (FERC)',frequency:'Ongoing',ft:'ongoing',month:null,day:null,owner:'Regulatory',priority:'medium',citation:'18 CFR §125',desc:'Maintain all FERC-related records for a minimum of 5 years as required. Includes EQR transaction data, correspondence with FERC, tariff amendments, and compliance documentation.',instr:'',links:[],completions:[],status:'ongoing',active:true},
+{id:'FE-09',market:'FERC',agency:'FERC',title:'Standards of Conduct Training',frequency:'Annual + New Hires',ft:'annual',month:12,day:31,owner:'Compliance',priority:'medium',citation:'18 CFR §358',dln:'Annual by Dec 31; new hires within 30 days of start',desc:'Annual Standards of Conduct training for all employees who interact with or have access to transmission function information. New employees must complete training within 30 days of hire. Maintain training records.',instr:'',links:[],completions:[],status:'pending',active:true},
+{id:'OO-05',market:'FERC',agency:'FERC',title:'MBR Tariff Amendment',frequency:'Event-Driven',ft:'event_driven',month:null,day:null,dln:'60–120 days before effective date',owner:'Regulatory',priority:'high',citation:'18 CFR §35',desc:'File MBR tariff amendment with FERC 60–120 days before the desired effective date of any change to tariff terms, pricing methodology, or service offerings. Coordinate with outside regulatory counsel for complex amendments.',instr:'',links:[],completions:[],status:'ongoing',active:true},
+{id:'OO-06',market:'FERC',agency:'FERC',title:'Affiliate Transaction Reporting',frequency:'Event-Driven',ft:'event_driven',month:null,day:null,dln:'Report in next quarterly Change in Status',owner:'Regulatory',priority:'high',citation:'18 CFR §35.42',desc:'Report affiliate transactions in the next quarterly Change in Status filing (FE-02). Maintain an internal log of all affiliate transactions for FERC reporting purposes.',instr:'',links:[],completions:[],status:'ongoing',active:true},
+
+// ── PJM ──
+{id:'PJ-01',market:'PJM',agency:'PJM',title:'Peak Load Contribution (PLC) & NSPL Reporting',frequency:'Annual + Daily Monitoring',ft:'ongoing',month:null,day:null,owner:'Operations',priority:'critical',citation:'PJM Manual 18',desc:'PLC and Net Scheduled Peak Load (NSPL) reporting. Annual PLC effective June 1 for new capacity year. Daily monitoring required throughout the year. Accurate PLC is critical for determining capacity obligation.',instr:'',links:[{label:'PJM Manual 18 (Capacity)',url:'https://www.pjm.com/-/media/DotCom/documents/manuals/m18.ashx'}],completions:[],status:'ongoing',active:true},
+{id:'PJ-02',market:'PJM',agency:'PJM',title:'Annual LSE Officer Certification',frequency:'Annual',ft:'annual',month:5,day:31,owner:'Regulatory',priority:'critical',citation:'PJM Operating Agreement',dln:'Before June 1 capacity year start',desc:'Annual officer certification for Load Serving Entity (LSE) participation in PJM. Must be submitted before June 1 commencement of the new capacity year. Signed by an authorized officer of the company.',instr:'',links:[],completions:[],status:'pending',active:true},
+{id:'PJ-03',market:'PJM',agency:'PJM',title:'RPM Capacity Auction Participation',frequency:'3+ per year',ft:'event_driven',month:null,day:null,dln:'Submit requirements 20–30 days before each auction',owner:'Operations',priority:'critical',citation:'PJM Manual 18',desc:'Participation in Reliability Pricing Model (RPM) capacity auctions including the Base Residual Auction (BRA) and Incremental Auctions as needed. Submit capacity requirements 20–30 days before each auction. Critical for capacity procurement compliance.',instr:'',links:[],completions:[],status:'ongoing',active:true},
+{id:'PJ-04',market:'PJM',agency:'PJM',title:'Monthly Hourly Load Data Submission',frequency:'Monthly',ft:'monthly',day:10,owner:'Operations',priority:'high',citation:'PJM Manual 19',dln:'10th of the following month',desc:'Monthly submission of hourly load data by the 10th of the following month. Required for all PJM LSEs. Data is used for load forecasting, settlement, and capacity planning.',instr:'',links:[{label:'PJM Manual 19 (Load Forecasting)',url:'https://www.pjm.com/-/media/DotCom/documents/manuals/m19.ashx'}],completions:[],status:'pending',active:true},
+{id:'PJ-05',market:'PJM',agency:'PJM',title:'Settlement Reconciliation Data Submission',frequency:'Monthly',ft:'event_driven',month:null,day:null,dln:'Last day of month + 2 months lag',owner:'Finance',priority:'high',citation:'PJM Operating Agreement',desc:'Monthly settlement reconciliation data submission due the last day of the month with a 2-month lag. Review and validate PJM settlement statements and submit corrections within the reconciliation window.',instr:'',links:[],completions:[],status:'ongoing',active:true},
+{id:'PJ-06',market:'PJM',agency:'PJM',title:'Credit Application and Maintenance (PJM)',frequency:'Ongoing',ft:'ongoing',month:null,day:null,owner:'Finance',priority:'critical',citation:'PJM Operating Agreement, Att. Q',desc:'Maintain required credit and collateral with PJM per Attachment Q of the OATT. Monitor credit exposure daily. Post additional collateral when required. Failure to maintain adequate credit can result in a default declaration.',instr:'',links:[{label:'PJM Credit Policy (Att. Q)',url:'https://agreements.pjm.com/oatt/4955'}],completions:[],status:'ongoing',active:true},
+{id:'PJ-07',market:'PJM',agency:'PJM',title:'NITS Charges Monitoring',frequency:'Daily / Quarterly',ft:'ongoing',month:null,day:null,owner:'Operations',priority:'critical',citation:'PJM Tariff',desc:'Daily monitoring of Network Integration Transmission Service (NITS) charges billed by PJM. Conduct quarterly reconciliation against expected charges. Identify and dispute billing errors promptly within the dispute window.',instr:'',links:[],completions:[],status:'ongoing',active:true},
+{id:'PJ-08',market:'PJM',agency:'PJM',title:'Capacity Deficiency Compliance',frequency:'Year-Round',ft:'ongoing',month:null,day:null,owner:'Operations',priority:'critical',citation:'PJM Manual 18',desc:'Year-round compliance with capacity obligations covering the June 1 – May 31 PJM capacity year. Monitor actual load vs. committed capacity positions. Procure additional capacity if deficiency is projected.',instr:'',links:[],completions:[],status:'ongoing',active:true},
+{id:'PJ-09',market:'PJM',agency:'PJM',title:'Load Forecast / Large Load Adjustment Requests',frequency:'Annual',ft:'annual',month:9,day:30,owner:'Operations',priority:'high',citation:'PJM Manual 19',dln:'September / October annually',desc:'Annual load forecast and large load adjustment requests submitted in September–October for the following planning period. Critical input for PJM capacity planning and the next Base Residual Auction.',instr:'',links:[],completions:[],status:'pending',active:true},
+{id:'PJ-10',market:'PJM',agency:'PJM',title:'Daily UCAP Obligation Tracking',frequency:'Daily (36 hrs ahead)',ft:'ongoing',month:null,day:null,owner:'Operations',priority:'critical',citation:'PJM Manual 18',dln:'36 hours ahead, daily',desc:'Daily tracking and submission of Unforced Capacity (UCAP) obligation 36 hours ahead of each operating day. Must ensure UCAP supply meets or exceeds the daily obligation. Monitor daily for compliance.',instr:'',links:[],completions:[],status:'ongoing',active:true},
+{id:'PJ-11',market:'PJM',agency:'PJM',title:'Regulation and Reserve Obligation Compliance',frequency:'Hourly / Ongoing',ft:'ongoing',month:null,day:null,owner:'Engineering',priority:'high',citation:'PJM Manual 11',desc:'Hourly compliance with PJM regulation and operating reserve obligations. Monitor actual vs. required reserve levels throughout each day. Coordinate with scheduling agent for hourly compliance.',instr:'',links:[{label:'PJM Manual 11 (Energy & AS)',url:'https://www.pjm.com/-/media/DotCom/documents/manuals/m11.pdf'}],completions:[],status:'ongoing',active:true},
+{id:'PJ-12',market:'PJM',agency:'PJM',title:'Annual Credit Compliance Attestation',frequency:'Annual',ft:'annual',month:12,day:31,owner:'Finance',priority:'high',citation:'PJM Operating Agreement',desc:'Annual attestation of credit compliance with PJM financial assurance requirements. Certify that all collateral arrangements, credit agreements, and financial assurance mechanisms remain adequate and current.',instr:'',links:[],completions:[],status:'pending',active:true},
+{id:'PJ-13',market:'PJM',agency:'PJM',title:'FRR Plan Filing (if elected)',frequency:'Multi-Year / Event',ft:'event_driven',month:null,day:null,owner:'Operations',priority:'high',citation:'PJM Operating Agreement',desc:'Fixed Resource Requirement (FRR) plan filing if Base Power elects FRR as an alternative to RPM auction participation. Multi-year commitment requires careful planning. Evaluate annually whether FRR election remains appropriate vs. RPM participation.',instr:'',links:[],completions:[],status:'ongoing',active:true},
+{id:'OO-07',market:'PJM',agency:'PJM',title:'New LSE Resource / Load Registration',frequency:'Event-Driven',ft:'event_driven',month:null,day:null,dln:'Allow 10 business days for PJM review',owner:'Regulatory',priority:'high',citation:'PJM Operating Agreement',desc:'Register new resources or load zones with PJM when adding new load zones or generation resources. Allow at least 10 business days for PJM administrative review before the target effective date.',instr:'',links:[],completions:[],status:'ongoing',active:true},
+
+// ── Corporate / SOS (franchise taxes removed — handled outside this tracker) ──
+{id:'SOS-08',market:'Corporate',agency:'SOS',title:'IL Annual Report — Base Texas REP, LLC',frequency:'Annual (Anniversary)',ft:'event_driven',month:null,day:null,dln:'Last day of month before anniversary month',owner:'Carter Copeland',priority:'high',citation:'805 ILCS 180',desc:'Illinois annual report for Base Texas REP, LLC. Due the last day of the month preceding the anniversary month of original IL registration. Confirm exact anniversary date and set a calendar reminder 60 days in advance.',instr:'',links:[],completions:[],status:'pending',active:true},
+{id:'SOS-11',market:'Corporate',agency:'Corporate',title:'New Entity SOS Registration Tracking',frequency:'Event-Driven',ft:'event_driven',month:null,day:null,dln:'Upon each new entity formation',owner:'Carter Copeland',priority:'high',citation:'Varies by state',desc:'Track SOS registrations across all states upon new entity formation. Each new entity may trigger SOS foreign qualification, tax registration, and new recurring annual filing obligations. Update this tracker when entities are formed.',instr:'',links:[],completions:[],status:'ongoing',active:true},
+{id:'CO-03',market:'Corporate',agency:'Corporate',title:'New Jurisdiction Compliance Checklist',frequency:'Event-Driven',ft:'event_driven',month:null,day:null,owner:'Regulatory',priority:'critical',citation:'Varies',dln:'Complete before commencing operations',desc:'Comprehensive compliance checklist to complete when entering any new market. Use the New Jurisdiction Template as the starting point. Critical to complete all steps before commencing operations in any new state.',instr:'Steps: (1) Register with SOS, (2) obtain EIN/state tax reg, (3) apply for PUC certification, (4) post bond/LOC, (5) file initial compliance docs, (6) register with ISO/RTO, (7) develop state-specific customer contracts, (8) add all recurring filings to this tracker.',links:[],completions:[],status:'ongoing',active:true}
+];
+
+// ─────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────
+let S = {
+  filings: [],
+  sel: null,
+  market: 'Texas',
+  fil: {agency:'all', status:'all', search:''},
+  showArch: false,
+  editId: null
+};
+
+// ─────────────────────────────────────────────
+// STORAGE
+// ─────────────────────────────────────────────
+// IDs removed from tracker (taxes handed off, no longer tracked)
+const RETIRED_IDS = ['SOS-01','SOS-02','SOS-04','SOS-06','SOS-09','TC-01'];
+
+function save() {
+  try { localStorage.setItem('bpc_rt_v3', JSON.stringify(S.filings)); } catch(e){}
+}
+function load() {
+  try {
+    const d = localStorage.getItem('bpc_rt_v3');
+    if (d) {
+      const parsed = JSON.parse(d);
+      // Migrate: strip retired IDs, add any new filings from FILINGS_INIT
+      const active = parsed.filter(f=>!RETIRED_IDS.includes(f.id));
+      const existIds = new Set(active.map(f=>f.id));
+      const newOnes = FILINGS_INIT.filter(f=>!existIds.has(f.id)).map(f=>({...f,links:[...(f.links||[])],completions:[]}));
+      S.filings = [...active, ...newOnes];
+    } else {
+      S.filings = FILINGS_INIT.map(f=>({...f,links:[...(f.links||[])],completions:[]}));
+    }
+  } catch(e) {
+    S.filings = FILINGS_INIT.map(f=>({...f,links:[...(f.links||[])],completions:[]}));
+  }
+}
+
+// ─────────────────────────────────────────────
+// DATE UTILS
+// ─────────────────────────────────────────────
+const TODAY = (() => { const d = new Date(); d.setHours(0,0,0,0); return d; })();
+
+function nextDue(f) {
+  const y = TODAY.getFullYear();
+  if (f.ft === 'annual' || f.ft === 'semi_annual') {
+    if (!f.month) return null;
+    let d = new Date(y, f.month-1, f.day);
+    if (d < TODAY) d = new Date(y+1, f.month-1, f.day);
+    return d;
+  }
+  if (f.ft === 'qfixed') {
+    const qs = [f.q1,f.q2,f.q3,f.q4].filter(Boolean).map(q=>{
+      let d = new Date(y, q.m-1, q.d);
+      if (d < TODAY) d = new Date(y+1, q.m-1, q.d);
+      return d;
+    });
+    return qs.sort((a,b)=>a-b)[0] || null;
+  }
+  if (f.ft === 'qoffset') {
+    const ends = [new Date(y,2,31),new Date(y,5,30),new Date(y,8,30),new Date(y,11,31)];
+    const dues = ends.map(e=>{ const d=new Date(e); d.setDate(d.getDate()+(f.offsetDays||45)); return d; });
+    const fut = dues.filter(d=>d>=TODAY).sort((a,b)=>a-b);
+    if (!fut.length) { const d=new Date(y+1,2,31); d.setDate(d.getDate()+(f.offsetDays||45)); return d; }
+    return fut[0];
+  }
+  if (f.ft === 'monthly') {
+    if (!f.day) return null;
+    let d = new Date(y, TODAY.getMonth(), f.day);
+    if (d < TODAY) d = new Date(y, TODAY.getMonth()+1, f.day);
+    return d;
+  }
+  return null;
+}
+
+function daysUntil(d) {
+  if (!d) return null;
+  return Math.ceil((d - TODAY) / 86400000);
+}
+
+function fmtDate(d) {
+  if (!d) return '—';
+  if (typeof d === 'string') d = new Date(d);
+  if (isNaN(d)) return '—';
+  return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+}
+
+function statusInfo(f) {
+  if (!f.active) return {lbl:'Archived', cls:'b-event', sort:99};
+  if (f.status==='complete') return {lbl:'Complete', cls:'b-complete', sort:10};
+  if (f.status==='in_progress') return {lbl:'In Progress', cls:'b-inprog', sort:3};
+  if (f.ft==='ongoing') return {lbl:'Ongoing', cls:'b-ongoing', sort:8};
+  if (f.ft==='event_driven') return {lbl:'Event-Driven', cls:'b-event', sort:9};
+  const nd = nextDue(f);
+  const days = daysUntil(nd);
+  if (days===null) return {lbl:'See Notes', cls:'b-event', sort:9};
+  if (days<0) return {lbl:`Overdue ${Math.abs(days)}d`, cls:'b-overdue', sort:0, days};
+  if (days===0) return {lbl:'Due Today!', cls:'b-overdue', sort:0, days:0};
+  if (days<=7) return {lbl:`Due in ${days}d`, cls:'b-soon', sort:1, days};
+  if (days<=30) return {lbl:`${days} days`, cls:'b-upcoming', sort:2, days};
+  return {lbl:fmtDate(nd), cls:'b-scheduled', sort:5, days};
+}
+
+function agBadge(ag) { return 'b-'+(ag||'SOS'); }
+
+// ─────────────────────────────────────────────
+// FILTER
+// ─────────────────────────────────────────────
+function filtered() {
+  return S.filings.filter(f => {
+    if (!f.active && !S.showArch) return false;
+    if (S.market !== 'All' && f.market !== S.market) return false;
+    if (S.fil.agency !== 'all' && f.agency !== S.fil.agency) return false;
+    const si = statusInfo(f);
+    if (S.fil.status !== 'all') {
+      const st = S.fil.status;
+      if (st==='overdue' && !si.lbl.startsWith('Overdue') && si.lbl!=='Due Today!') return false;
+      if (st==='due-soon' && si.cls!=='b-soon') return false;
+      if (st==='upcoming' && si.cls!=='b-upcoming') return false;
+      if (st==='complete' && f.status!=='complete') return false;
+      if (st==='inprog' && f.status!=='in_progress') return false;
+      if (st==='ongoing' && f.ft!=='ongoing') return false;
+      if (st==='event' && f.ft!=='event_driven') return false;
+    }
+    if (S.fil.search) {
+      const q = S.fil.search.toLowerCase();
+      if (![f.title,f.id,f.agency,f.desc||'',f.citation||''].some(x=>x.toLowerCase().includes(q))) return false;
+    }
+    return true;
+  }).sort((a,b) => {
+    const sa=statusInfo(a), sb=statusInfo(b);
+    if (sa.sort!==sb.sort) return sa.sort-sb.sort;
+    const da=sa.days??9999, db=sb.days??9999;
+    return da-db;
+  });
+}
+
+// ─────────────────────────────────────────────
+// RENDER STATS
+// ─────────────────────────────────────────────
+function renderStats(fls) {
+  let od=0,sn=0,up=0;
+  fls.forEach(f=>{
+    const si=statusInfo(f);
+    if(si.lbl.startsWith('Overdue')||si.lbl==='Due Today!') od++;
+    else if(si.cls==='b-soon') sn++;
+    else if(si.cls==='b-upcoming') up++;
+  });
+  document.getElementById('statsRow').innerHTML = `
+    <div class="sc sc-od ${S.fil.status==='overdue'?'active':''}" onclick="qFil('overdue')"><div class="sv">${od}</div><div class="sl">⚠ Overdue</div></div>
+    <div class="sc sc-soon ${S.fil.status==='due-soon'?'active':''}" onclick="qFil('due-soon')"><div class="sv">${sn}</div><div class="sl">🔔 Due This Week</div></div>
+    <div class="sc sc-up ${S.fil.status==='upcoming'?'active':''}" onclick="qFil('upcoming')"><div class="sv">${up}</div><div class="sl">📅 Next 30 Days</div></div>
+    <div class="sc sc-tot" onclick="clearFil()"><div class="sv">${fls.length}</div><div class="sl">📋 Total Filings</div></div>
+  `;
+}
+
+// ─────────────────────────────────────────────
+// RENDER ALERT BANNER
+// ─────────────────────────────────────────────
+function renderAlert(fls) {
+  const el = document.getElementById('alertBanner');
+  const urgent = fls.filter(f=>{
+    const si=statusInfo(f);
+    return (si.lbl.startsWith('Overdue')||si.lbl==='Due Today!'||si.cls==='b-soon') && f.status!=='complete';
+  });
+  if(!urgent.length){el.style.display='none';return;}
+  el.style.display='flex';
+  const hasOd = urgent.some(f=>statusInfo(f).lbl.startsWith('Overdue'));
+  el.className='alert'+(hasOd?'':' warn');
+  const names=urgent.slice(0,2).map(f=>f.title.length>50?f.title.slice(0,50)+'…':f.title);
+  el.innerHTML=`<span>${hasOd?'🚨':'⏰'}</span><strong>${urgent.length} filing${urgent.length>1?'s':''} need immediate attention:</strong>&nbsp;${names.join('; ')}${urgent.length>2?` +${urgent.length-2} more`:''}`;
+}
+
+// ─────────────────────────────────────────────
+// RENDER AGENCY FILTER
+// ─────────────────────────────────────────────
+function renderAgFil() {
+  const ags = [...new Set(S.filings.filter(f=>S.market==='All'||f.market===S.market).map(f=>f.agency))].sort();
+  const el = document.getElementById('agFil');
+  const cur = el.value;
+  el.innerHTML = '<option value="all">All Agencies</option>' + ags.map(a=>`<option value="${a}"${a===cur?' selected':''}>${a}</option>`).join('');
+}
+
+// ─────────────────────────────────────────────
+// RENDER TABLE
+// ─────────────────────────────────────────────
+function renderTable(fls) {
+  const el = document.getElementById('tbl');
+  if(!fls.length){
+    el.innerHTML='<div class="empty"><div class="empty-i">📋</div><div class="empty-t">No filings match your filters</div><div>Try adjusting the filters or market tab above</div></div>';
+    return;
+  }
+  const grps = [
+    {k:'od', lbl:'🔴 Overdue', items:[]},
+    {k:'sn', lbl:'🟠 Due Within 7 Days', items:[]},
+    {k:'up', lbl:'🔵 Due Within 30 Days', items:[]},
+    {k:'sc', lbl:'🗓 Scheduled (Future)', items:[]},
+    {k:'ip', lbl:'🟣 In Progress', items:[]},
+    {k:'co', lbl:'✅ Completed', items:[]},
+    {k:'on', lbl:'🔄 Ongoing / Continuous', items:[]},
+    {k:'ev', lbl:'⚡ Event-Driven', items:[]}
+  ];
+  fls.forEach(f=>{
+    const si=statusInfo(f);
+    if(f.status==='complete') grps[5].items.push(f);
+    else if(f.status==='in_progress') grps[4].items.push(f);
+    else if(si.lbl.startsWith('Overdue')||si.lbl==='Due Today!') grps[0].items.push(f);
+    else if(si.cls==='b-soon') grps[1].items.push(f);
+    else if(si.cls==='b-upcoming') grps[2].items.push(f);
+    else if(si.cls==='b-scheduled') grps[3].items.push(f);
+    else if(f.ft==='ongoing') grps[6].items.push(f);
+    else grps[7].items.push(f);
+  });
+
+  let h = `<table><thead><tr>
+    <th style="width:62px">ID</th>
+    <th>Filing / Requirement</th>
+    <th style="width:72px">Agency</th>
+    <th style="width:140px">Due Date</th>
+    <th style="width:120px">Status</th>
+    <th style="width:80px">Action</th>
+  </tr></thead><tbody>`;
+
+  grps.forEach(g=>{
+    if(!g.items.length) return;
+    h+=`<tr class="grp-hdr"><td colspan="6">${g.lbl} <span style="background:#e2e8f0;color:#475569;padding:1px 6px;border-radius:999px;font-size:9px">${g.items.length}</span></td></tr>`;
+    g.items.forEach(f=>{
+      const si=statusInfo(f);
+      const nd=nextDue(f);
+      const days=daysUntil(nd);
+      const isSel=f.id===S.sel;
+      let dc='';
+      if(f.ft==='ongoing') dc='<span style="color:#64748b;font-size:11px">Continuous</span>';
+      else if(f.ft==='event_driven') dc=`<span style="color:#64748b;font-size:11px">${f.dln||'Upon Event'}</span>`;
+      else if(nd){
+        const cls=days<0?'od':days<=7?'so':days<=30?'up':'';
+        dc=`<div class="dc"><span class="dc-main${cls?' '+cls:''}">${fmtDate(nd)}</span>${days!==null?`<span class="dc-sub">${days<0?`${Math.abs(days)}d overdue`:days===0?'Due today':`in ${days} days`}</span>`:''}</div>`;
+      } else dc=`<span style="color:#64748b;font-size:11px">${f.dln||'See notes'}</span>`;
+
+      const actionBtn = (f.status!=='complete'&&f.ft!=='ongoing'&&f.ft!=='event_driven')
+        ? `<button class="btn btn-g btn-xs" onclick="event.stopPropagation();quickDone('${f.id}')">✓ Done</button>`
+        : `<button class="btn btn-s btn-xs" onclick="event.stopPropagation();selFiling('${f.id}')">View</button>`;
+
+      h+=`<tr class="data${isSel?' sel':''}${!f.active?' arch':''}" onclick="selFiling('${f.id}')">
+        <td><code style="font-size:10px;color:#64748b">${f.id}</code></td>
+        <td>
+          <div style="font-weight:500;font-size:12px;line-height:1.35">${f.title}</div>
+          ${f.citation?`<div style="font-size:10px;color:#94a3b8;margin-top:1px">${f.citation}</div>`:''}
+        </td>
+        <td><span class="bdg ${agBadge(f.agency)}">${f.agency}</span></td>
+        <td>${dc}</td>
+        <td><span class="bdg ${si.cls}">${si.lbl}</span></td>
+        <td>${actionBtn}</td>
+      </tr>`;
+    });
+  });
+  h+='</tbody></table>';
+  el.innerHTML=h;
+}
+
+// ─────────────────────────────────────────────
+// RENDER DETAIL PANEL
+// ─────────────────────────────────────────────
+function renderSide() {
+  const panel=document.getElementById('side');
+  if(!S.sel){panel.classList.remove('open');panel.innerHTML='';return;}
+  const f=S.filings.find(x=>x.id===S.sel);
+  if(!f){panel.classList.remove('open');return;}
+  const si=statusInfo(f);
+  const nd=nextDue(f);
+  const comps=f.completions||[];
+  const allAtts=comps.flatMap(c=>c.attachments||[]);
+
+  panel.classList.add('open');
+  panel.innerHTML=`
+  <div class="dp-hdr">
+    <div style="flex:1;min-width:0">
+      <div class="dp-id">${f.id} · ${f.market}</div>
+      <div class="dp-title">${f.title}</div>
+      <div style="margin-top:5px;display:flex;gap:5px;flex-wrap:wrap">
+        <span class="bdg ${agBadge(f.agency)}">${f.agency}</span>
+        <span class="bdg ${si.cls}">${si.lbl}</span>
+      </div>
+    </div>
+    <button class="dp-close" onclick="closeSide()">✕</button>
+  </div>
+  <div class="dp-body">
+
+    <div class="sec">
+      <div class="sec-title">Filing Details</div>
+      <div class="dg">
+        <div class="df"><span class="df-l">Frequency</span><span class="df-v">${f.frequency}</span></div>
+        <div class="df"><span class="df-l">Next Due</span><span class="df-v">${nd?fmtDate(nd):(f.dln||'—')}</span></div>
+        <div class="df" style="grid-column:1/-1"><span class="df-l">Citation</span><span class="df-v" style="font-size:10px">${f.citation||'—'}</span></div>
+      </div>
+      ${f.dln?`<div class="note-box" style="margin-top:6px">⏱ <strong>Timing:</strong> ${f.dln}</div>`:''}
+    </div>
+    <div class="div"></div>
+
+    <div class="sec">
+      <div class="sec-title">Description</div>
+      <div style="font-size:11px;color:#374151;line-height:1.65">${f.desc||'No description.'}</div>
+    </div>
+    <div class="div"></div>
+
+    <div class="sec">
+      <div class="sec-title">Instructions & Internal Notes</div>
+      <textarea class="dta" id="insTa_${f.id}" placeholder="Add step-by-step instructions, data sources, contacts, or reminders for the person completing this filing…" onblur="saveF('${f.id}','instr',this.value)">${f.instr||''}</textarea>
+    </div>
+    <div class="div"></div>
+
+    <div class="sec">
+      <div class="sec-title">Playbooks & Resource Links</div>
+      <div id="links_${f.id}">
+        ${(f.links||[]).map((l,i)=>`
+          <div class="li">
+            <span>🔗</span>
+            <a href="${l.url}" target="_blank" rel="noopener">${l.label||l.url}</a>
+            <button class="lr" onclick="rmLink('${f.id}',${i})">✕</button>
+          </div>
+        `).join('')}
+      </div>
+      <div style="display:flex;gap:5px;margin-top:5px">
+        <input type="text" class="dinp" id="nll_${f.id}" placeholder="Label (e.g. Filing Portal)" style="flex:1">
+        <input type="text" class="dinp" id="nlu_${f.id}" placeholder="https://…" style="flex:2">
+        <button class="btn btn-s btn-sm" onclick="addLink('${f.id}')">+ Add</button>
+      </div>
+    </div>
+    <div class="div"></div>
+
+    <div class="sec">
+      <div class="sec-title">Mark Completion</div>
+      <div class="cf">
+        <div class="fr">
+          <div class="fg"><label>Completed Date</label><input type="date" id="cd_${f.id}" value="${TODAY.toISOString().split('T')[0]}"></div>
+          <div class="fg"><label>Completed By</label><input type="text" id="cb_${f.id}" placeholder="Name" value="${f.owner||''}"></div>
+        </div>
+        <div class="fg" style="margin-bottom:7px">
+          <label>Notes / Confirmation # / Reference</label>
+          <textarea id="cn_${f.id}" placeholder="Filing confirmation number, submission notes, or any relevant reference…"></textarea>
+        </div>
+        <div class="fg" style="margin-bottom:7px">
+          <label>Attach Submitted Document</label>
+          <div class="uparea" id="upa_${f.id}" onclick="document.getElementById('fi_${f.id}').click()" ondragover="event.preventDefault();this.classList.add('drag')" ondragleave="this.classList.remove('drag')" ondrop="dropFile(event,'${f.id}')">
+            📎 Click to attach or drag & drop<div style="font-size:10px;margin-top:2px;opacity:.7">PDF, XLSX, DOCX, PNG — up to 10MB</div>
+          </div>
+          <input type="file" id="fi_${f.id}" style="display:none" multiple accept=".pdf,.xlsx,.docx,.xls,.doc,.png,.jpg,.csv" onchange="pickFile(event,'${f.id}')">
+          <div id="pend_${f.id}" style="margin-top:4px"></div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          ${f.status!=='in_progress'?`<button class="btn btn-s btn-sm" onclick="setSt('${f.id}','in_progress')">▶ Mark In Progress</button>`:''}
+          <button class="btn btn-g" onclick="markDone('${f.id}')">✅ Mark Complete & Save</button>
+          ${f.status==='complete'?`<button class="btn btn-s btn-sm" onclick="setSt('${f.id}','pending')">↩ Reopen</button>`:''}
+        </div>
+      </div>
+    </div>
+
+    ${allAtts.length?`
+    <div class="div"></div>
+    <div class="sec">
+      <div class="sec-title">Uploaded Documents (${allAtts.length})</div>
+      ${allAtts.map(a=>`
+        <div class="att">
+          <span style="font-size:15px">${fileIcon(a.type)}</span>
+          <div class="att-info"><div class="att-name">${a.name}</div><div class="att-meta">${fmtDate(a.date)} · ${fmtSize(a.size)}</div></div>
+          ${a.data?`<button class="btn btn-s btn-xs" onclick="dlFile('${a.name}','${a.data}')">⬇</button>`:''}
+        </div>
+      `).join('')}
+    </div>`:''}
+
+    ${comps.length?`
+    <div class="div"></div>
+    <div class="sec">
+      <div class="sec-title">Completion History</div>
+      ${[...comps].reverse().map(c=>`
+        <div class="hist">
+          <div class="hist-d">✅ ${fmtDate(c.date)}</div>
+          <div class="hist-by">By: ${c.by||'Unknown'}</div>
+          ${c.notes?`<div class="hist-n">"${c.notes}"</div>`:''}
+          ${(c.attachments||[]).length?`<div style="font-size:10px;color:#64748b;margin-top:2px">📎 ${c.attachments.length} document(s)</div>`:''}
+        </div>
+      `).join('')}
+    </div>`:''}
+
+    <div class="div"></div>
+    <div class="sec">
+      <div class="sec-title">Admin</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn btn-s btn-sm" onclick="openEdit('${f.id}')">✏️ Edit Filing</button>
+        ${f.active
+          ?`<button class="btn btn-d btn-sm" onclick="archF('${f.id}')">🗑 Archive Filing</button>`
+          :`<button class="btn btn-s btn-sm" onclick="restoreF('${f.id}')">↩ Restore</button>`}
+      </div>
+    </div>
+
+  </div>`;
+
+  window._pend = window._pend || {};
+  window._pend[f.id] = window._pend[f.id] || [];
+}
+
+// ─────────────────────────────────────────────
+// ACTIONS
+// ─────────────────────────────────────────────
+function selFiling(id){S.sel=id===S.sel?null:id;render();if(S.sel)document.getElementById('side').scrollTop=0;}
+function closeSide(){S.sel=null;render();}
+function setMarket(m,el){S.market=m;S.fil.agency='all';S.sel=null;document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');if(m!=='Archive')renderAgFil();render();}
+function applyFilters(){S.fil.search=document.getElementById('srch').value;S.fil.agency=document.getElementById('agFil').value;S.fil.status=document.getElementById('stFil').value;S.showArch=document.getElementById('showArch').checked;render();}
+function qFil(st){S.fil.status=S.fil.status===st?'all':st;document.getElementById('stFil').value=S.fil.status;render();}
+function clearFil(){S.fil={agency:'all',status:'all',search:''};document.getElementById('srch').value='';document.getElementById('agFil').value='all';document.getElementById('stFil').value='all';render();}
+function saveF(id,field,val){const f=S.filings.find(x=>x.id===id);if(f){f[field]=val;save();}}
+function setSt(id,st){const f=S.filings.find(x=>x.id===id);if(f){f.status=st;save();render();}}
+function archF(id){if(!confirm('Archive this filing? It will be hidden from the main view. You can restore it anytime by checking "Show archived".'))return;const f=S.filings.find(x=>x.id===id);if(f){f.active=false;save();S.sel=null;render();}}
+function restoreF(id){const f=S.filings.find(x=>x.id===id);if(f){f.active=true;save();render();}}
+function addLink(id){const f=S.filings.find(x=>x.id===id);const lbl=document.getElementById(`nll_${id}`).value.trim();const url=document.getElementById(`nlu_${id}`).value.trim();if(!url)return;if(!f.links)f.links=[];f.links.push({label:lbl||url,url,added:new Date().toISOString()});save();renderSide();}
+function rmLink(id,i){const f=S.filings.find(x=>x.id===id);if(f&&f.links){f.links.splice(i,1);save();renderSide();}}
+function quickDone(id){S.sel=id;const f=S.filings.find(x=>x.id===id);if(!f)return;if(!f.completions)f.completions=[];f.completions.push({date:TODAY.toISOString().split('T')[0],by:f.owner||'',notes:'Quick complete',attachments:[]});f.status='complete';save();render();}
+function markDone(id){const f=S.filings.find(x=>x.id===id);if(!f)return;const dt=document.getElementById(`cd_${id}`)?.value||TODAY.toISOString().split('T')[0];const by=document.getElementById(`cb_${id}`)?.value||'';const notes=document.getElementById(`cn_${id}`)?.value||'';const pend=(window._pend||{})[id]||[];if(!f.completions)f.completions=[];f.completions.push({date:dt,by,notes,attachments:pend});f.status='complete';if(window._pend)delete window._pend[id];save();render();}
+
+// ─────────────────────────────────────────────
+// FILES
+// ─────────────────────────────────────────────
+function pickFile(e,id){procFiles(e.target.files,id);}
+function dropFile(e,id){e.preventDefault();document.getElementById(`upa_${id}`)?.classList.remove('drag');procFiles(e.dataTransfer.files,id);}
+function procFiles(files,id){
+  if(!files||!files.length)return;
+  if(!window._pend)window._pend={};
+  if(!window._pend[id])window._pend[id]=[];
+  Array.from(files).forEach(file=>{
+    if(file.size>10*1024*1024){alert(`${file.name} exceeds 10MB limit.`);return;}
+    const r=new FileReader();
+    r.onload=e=>{
+      window._pend[id].push({name:file.name,size:file.size,type:file.type,date:TODAY.toISOString().split('T')[0],data:e.target.result});
+      renderPend(id);
+    };
+    r.readAsDataURL(file);
+  });
+}
+function renderPend(id){
+  const el=document.getElementById(`pend_${id}`);
+  if(!el)return;
+  const files=(window._pend||{})[id]||[];
+  el.innerHTML=files.map((f,i)=>`<div class="att"><span>${fileIcon(f.type)}</span><div class="att-info"><div class="att-name">${f.name}</div><div class="att-meta">${fmtSize(f.size)} · Ready to attach</div></div><button class="btn btn-s btn-xs" onclick="rmPend('${id}',${i})">✕</button></div>`).join('');
+}
+function rmPend(id,i){if(window._pend&&window._pend[id]){window._pend[id].splice(i,1);renderPend(id);}}
+function dlFile(name,data){const a=document.createElement('a');a.href=data;a.download=name;a.click();}
+function fileIcon(t){if(!t)return'📄';if(t.includes('pdf'))return'📑';if(t.includes('sheet')||t.includes('excel'))return'📊';if(t.includes('word')||t.includes('document'))return'📝';if(t.includes('image'))return'🖼';return'📄';}
+function fmtSize(b){if(!b)return'';if(b<1024)return b+'B';if(b<1048576)return(b/1024).toFixed(1)+'KB';return(b/1048576).toFixed(1)+'MB';}
+
+// ─────────────────────────────────────────────
+// ADD / EDIT MODAL
+// ─────────────────────────────────────────────
+function openAddModal(){S.editId=null;document.getElementById('mTitle').textContent='Add New Filing';document.getElementById('mSaveBtn').textContent='Add Filing';document.getElementById('mBody').innerHTML=formHTML({});document.getElementById('addModal').classList.remove('hide');}
+function openEdit(id){const f=S.filings.find(x=>x.id===id);if(!f)return;S.editId=id;document.getElementById('mTitle').textContent='Edit Filing';document.getElementById('mSaveBtn').textContent='Save Changes';document.getElementById('mBody').innerHTML=formHTML(f);document.getElementById('addModal').classList.remove('hide');}
+function closeModal(){document.getElementById('addModal').classList.add('hide');S.editId=null;}
+function formHTML(f){
+  const mkts=['Texas','Illinois','FERC','PJM','Corporate'];
+  const ags=['PUCT','ERCOT','ICC','FERC','PJM','SOS','TC','EOP','Corporate'];
+  const fts=[{v:'annual',l:'Annual'},{v:'semi_annual',l:'Semi-Annual'},{v:'qfixed',l:'Quarterly (Fixed Dates)'},{v:'qoffset',l:'Quarterly (Offset Days)'},{v:'monthly',l:'Monthly'},{v:'ongoing',l:'Ongoing / Continuous'},{v:'event_driven',l:'Event-Driven / Per Occurrence'}];
+  return `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+    <div class="fg"><label>Filing ID *</label><input type="text" id="fm_id" value="${f.id||''}" placeholder="e.g. TX-15"${S.editId?' readonly':''}></div>
+    <div class="fg"><label>Market *</label><select id="fm_mkt">${mkts.map(m=>`<option value="${m}"${f.market===m?' selected':''}>${m}</option>`).join('')}</select></div>
+    <div class="fg" style="grid-column:1/-1"><label>Filing Title *</label><input type="text" id="fm_title" value="${(f.title||'').replace(/"/g,'&quot;')}" placeholder="Full name of this filing requirement"></div>
+    <div class="fg"><label>Agency</label><select id="fm_ag">${ags.map(a=>`<option value="${a}"${f.agency===a?' selected':''}>${a}</option>`).join('')}</select></div>
+    <div class="fg"><label>Frequency Type</label><select id="fm_ft">${fts.map(ft=>`<option value="${ft.v}"${f.ft===ft.v?' selected':''}>${ft.l}</option>`).join('')}</select></div>
+    <div class="fg"><label>Due Month (1–12)</label><input type="number" id="fm_mo" value="${f.month||''}" placeholder="e.g. 3 for March" min="1" max="12"></div>
+    <div class="fg"><label>Due Day</label><input type="number" id="fm_dy" value="${f.day||''}" placeholder="e.g. 15" min="1" max="31"></div>
+    <div class="fg" style="grid-column:1/-1"><label>Legal Citation</label><input type="text" id="fm_cite" value="${f.citation||''}" placeholder="e.g. 16 TAC 25.107(i)"></div>
+    <div class="fg" style="grid-column:1/-1"><label>Timing / Deadline Note</label><input type="text" id="fm_dln" value="${f.dln||''}" placeholder="e.g. 45 days after quarter end"></div>
+    <div class="fg" style="grid-column:1/-1"><label>Description</label><textarea id="fm_desc" style="width:100%;padding:6px;border:1px solid #e2e8f0;border-radius:5px;font-size:11px;font-family:inherit;min-height:75px">${f.desc||''}</textarea></div>
+    <div class="fg" style="grid-column:1/-1"><label>Instructions</label><textarea id="fm_instr" style="width:100%;padding:6px;border:1px solid #e2e8f0;border-radius:5px;font-size:11px;font-family:inherit;min-height:55px">${f.instr||''}</textarea></div>
+  </div>`;
+}
+function saveModal(){
+  const id=document.getElementById('fm_id').value.trim();
+  const title=document.getElementById('fm_title').value.trim();
+  if(!id||!title){alert('Please fill in the required fields: ID and Title.');return;}
+  if(!S.editId&&S.filings.find(x=>x.id===id)){alert('A filing with this ID already exists. Please use a unique ID.');return;}
+  const ft=document.getElementById('fm_ft').value;
+  const data={id,market:document.getElementById('fm_mkt').value,agency:document.getElementById('fm_ag').value,title,ft,frequency:document.getElementById('fm_ft').options[document.getElementById('fm_ft').selectedIndex].text,month:parseInt(document.getElementById('fm_mo').value)||null,day:parseInt(document.getElementById('fm_dy').value)||null,citation:document.getElementById('fm_cite').value.trim(),dln:document.getElementById('fm_dln').value.trim(),desc:document.getElementById('fm_desc').value.trim(),instr:document.getElementById('fm_instr').value.trim()};
+  if(S.editId){const f=S.filings.find(x=>x.id===S.editId);if(f)Object.assign(f,data);}
+  else{S.filings.push({...data,links:[],completions:[],status:'pending',active:true});}
+  save();closeModal();S.sel=id;render();
+}
+
+// ─────────────────────────────────────────────
+// EXPORT ICS
+// ─────────────────────────────────────────────
+function exportICS(){
+  const fls=filtered().filter(f=>f.ft!=='ongoing'&&f.ft!=='event_driven'&&nextDue(f));
+  if(!fls.length){alert('No scheduled filings to export for the current view.');return;}
+  let ics=`BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Base Power Regulatory Tracker//EN\r\nCALSCALE:GREGORIAN\r\nX-WR-CALNAME:Base Power Regulatory Filings\r\n`;
+  fls.forEach(f=>{
+    const d=nextDue(f);
+    if(!d)return;
+    const stamp=new Date().toISOString().replace(/[-:]/g,'').split('.')[0]+'Z';
+    const ds=d.toISOString().split('T')[0].replace(/-/g,'');
+    const al=new Date(d);al.setDate(al.getDate()-7);
+    ics+=`BEGIN:VEVENT\r\nUID:${f.id}-${ds}@bpc-regtracker\r\nSUMMARY:${f.id}: ${f.title}\r\nDTSTART;VALUE=DATE:${ds}\r\nDTEND;VALUE=DATE:${ds}\r\nDTSTAMP:${stamp}\r\nDESCRIPTION:${(f.desc||'').replace(/\n/g,'\\n').slice(0,200)}\r\nCATEGORIES:${f.agency}\r\nBEGIN:VALARM\r\nTRIGGER;VALUE=DATE-TIME:${al.toISOString().replace(/[-:]/g,'').split('.')[0]}Z\r\nACTION:DISPLAY\r\nDESCRIPTION:Due in 7 days: ${f.title}\r\nEND:VALARM\r\nEND:VEVENT\r\n`;
+  });
+  ics+='END:VCALENDAR';
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([ics],{type:'text/calendar'}));
+  a.download=`BasePower_RegulatoryCalendar_${S.market.replace(/ /g,'_')}.ics`;
+  a.click();
+}
+
+// ─────────────────────────────────────────────
+// RENDER ARCHIVE VIEW
+// ─────────────────────────────────────────────
+function renderArchive() {
+  const el = document.getElementById('archView');
+  // Collect all filings that have at least one completion entry
+  const withComps = S.filings
+    .filter(f => f.completions && f.completions.length > 0)
+    .sort((a,b) => {
+      // Sort by most recent completion date descending
+      const la = a.completions[a.completions.length-1]?.date || '';
+      const lb = b.completions[b.completions.length-1]?.date || '';
+      return lb.localeCompare(la);
+    });
+
+  if (!withComps.length) {
+    el.innerHTML = `<div class="arch-empty">
+      <div style="font-size:32px;margin-bottom:8px">📁</div>
+      <div style="font-weight:500;color:#64748b;margin-bottom:4px">No completed filings yet</div>
+      <div>When you mark a filing complete and attach documents, they'll appear here for your records.</div>
+    </div>`;
+    return;
+  }
+
+  // Optional search within archive
+  const q = (document.getElementById('archSrch')?.value || '').toLowerCase();
+
+  let h = '';
+  withComps.forEach(f => {
+    if (q && !f.title.toLowerCase().includes(q) && !f.id.toLowerCase().includes(q) && !f.agency.toLowerCase().includes(q)) return;
+    const comps = [...f.completions].reverse(); // most recent first
+    h += `<div class="arch-filing">
+      <div class="arch-filing-hdr">
+        <div>
+          <div class="arch-sub-id">${f.id} · ${f.market}</div>
+          <div class="arch-filing-title">${f.title}</div>
+        </div>
+        <span class="bdg ${agBadge(f.agency)}">${f.agency}</span>
+        <span style="font-size:10px;color:#94a3b8;font-weight:500">${comps.length} submission${comps.length>1?'s':''}</span>
+      </div>`;
+    comps.forEach((c,i) => {
+      const atts = c.attachments || [];
+      h += `<div class="arch-entry">
+        <div class="arch-date">${fmtDate(c.date)}</div>
+        <div class="arch-meta">
+          ${c.by ? `<span style="font-weight:600">${c.by}</span> · ` : ''}
+          ${c.notes ? `<span>${c.notes}</span>` : '<span style="color:#94a3b8;font-style:italic">No notes recorded</span>'}
+          ${atts.length ? `<div class="arch-atts">
+            ${atts.map(a=>`
+              <div class="arch-att">
+                <span>${fileIcon(a.type)}</span>
+                <span class="arch-att-name">${a.name}</span>
+                <span style="color:#94a3b8;font-size:10px">${fmtSize(a.size)}</span>
+                ${a.data?`<button class="btn btn-g btn-xs" onclick="dlFile('${a.name.replace(/'/g,"\\'")}','${a.data}')">⬇ Download</button>`:''}
+              </div>`).join('')}
+          </div>` : `<div style="font-size:10px;color:#94a3b8;margin-top:3px">No documents attached</div>`}
+        </div>
+      </div>`;
+    });
+    h += '</div>';
+  });
+
+  el.innerHTML = h || `<div class="arch-empty">No results match your search.</div>`;
+}
+
+// ─────────────────────────────────────────────
+// MAIN RENDER
+// ─────────────────────────────────────────────
+function render(){
+  const isArchive = S.market === 'Archive';
+  const tbl = document.getElementById('tbl');
+  const archView = document.getElementById('archView');
+  const fbar = document.getElementById('fbar');
+  const statsRow = document.getElementById('statsRow');
+  const alertBanner = document.getElementById('alertBanner');
+  const side = document.getElementById('side');
+
+  if (isArchive) {
+    tbl.style.display = 'none';
+    archView.style.display = 'block';
+    fbar.style.display = 'none';
+    statsRow.innerHTML = '';
+    alertBanner.style.display = 'none';
+    side.classList.remove('open');
+    renderArchive();
+  } else {
+    tbl.style.display = '';
+    archView.style.display = 'none';
+    fbar.style.display = '';
+    const fls = filtered();
+    renderStats(fls);
+    renderAlert(fls);
+    renderTable(fls);
+    renderSide();
+  }
+}
+
+// ─────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded',()=>{
+  load();
+  renderAgFil();
+  render();
+});
+</script>
+</body>
+</html>
