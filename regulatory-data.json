@@ -1607,11 +1607,17 @@
         "url": "https://mbrweb.ferc.gov/"
       }
     ],
-    "status": "ongoing",
+    "status": "complete",
     "active": true,
     "baseId": "FE-03",
-    "periodLabel": "",
-    "completion": null
+    "periodLabel": "Jun 2026",
+    "completion": {
+      "date": "2026-05-21",
+      "by": "Regulatory",
+      "notes": "Not needed this year",
+      "attachments": []
+    },
+    "periodDueDate": "2026-06-15"
   },
   {
     "id": "FE-04",
@@ -2328,5 +2334,32 @@
     "periodLabel": "Jul 2026",
     "completion": null,
     "periodDueDate": "2026-07-10"
+  },
+  {
+    "id": "FE-03_202607",
+    "market": "FERC",
+    "agency": "FERC",
+    "title": "MBR Database Monthly Submission",
+    "frequency": "Monthly (if changes)",
+    "ft": "monthly",
+    "day": 15,
+    "owner": "Regulatory",
+    "priority": "high",
+    "citation": "18 CFR §35.42",
+    "desc": "Monthly MBR database submission by the 15th of each month — only required if changes occurred. Includes updates to asset appendices, affiliate lists, and market conditions. Skip if no changes.",
+    "dln": "15th of each month (only if changes occurred)",
+    "instr": "",
+    "links": [
+      {
+        "label": "FERC MBR Database Portal",
+        "url": "https://mbrweb.ferc.gov/"
+      }
+    ],
+    "status": "pending",
+    "active": true,
+    "baseId": "FE-03",
+    "periodLabel": "Jul 2026",
+    "completion": null,
+    "periodDueDate": "2026-07-15"
   }
 ]
