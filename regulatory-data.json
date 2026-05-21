@@ -1831,11 +1831,17 @@
     "desc": "Annual officer certification for Load Serving Entity (LSE) participation in PJM. Must be submitted before June 1 commencement of the new capacity year. Signed by an authorized officer of the company.",
     "instr": "",
     "links": [],
-    "status": "pending",
+    "status": "complete",
     "active": true,
     "baseId": "PJ-02",
-    "periodLabel": "",
-    "completion": null
+    "periodLabel": "2026",
+    "completion": {
+      "date": "2026-05-21",
+      "by": "Regulatory",
+      "notes": "Not needed this year",
+      "attachments": []
+    },
+    "periodDueDate": "2026-05-31"
   },
   {
     "id": "PJ-03",
@@ -2266,5 +2272,28 @@
     "periodLabel": "2027",
     "completion": null,
     "periodDueDate": "2027-06-15"
+  },
+  {
+    "id": "PJ-02_202705",
+    "market": "PJM",
+    "agency": "PJM",
+    "title": "Annual LSE Officer Certification",
+    "frequency": "Annual",
+    "ft": "annual",
+    "month": 5,
+    "day": 31,
+    "owner": "Regulatory",
+    "priority": "critical",
+    "citation": "PJM Operating Agreement",
+    "dln": "Before June 1 capacity year start",
+    "desc": "Annual officer certification for Load Serving Entity (LSE) participation in PJM. Must be submitted before June 1 commencement of the new capacity year. Signed by an authorized officer of the company.",
+    "instr": "",
+    "links": [],
+    "status": "pending",
+    "active": true,
+    "baseId": "PJ-02",
+    "periodLabel": "2027",
+    "completion": null,
+    "periodDueDate": "2027-05-31"
   }
 ]
