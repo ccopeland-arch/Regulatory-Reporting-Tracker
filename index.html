@@ -197,6 +197,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
     <div class="hdr-sub">Regulatory Reporting Tracker</div>
   </div>
   <div class="hdr-r">
+    <button class="btn btn-s btn-sm" id="ghBtn" onclick="openGHModal()" title="GitHub Sync Settings">⚙️ Sync</button>
     <button class="btn btn-s btn-sm" onclick="exportICS()">📅 Export Calendar</button>
     <button class="btn btn-p btn-sm" onclick="openAddModal()">+ Add Filing</button>
   </div>
@@ -234,6 +235,36 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
     <div id="archView" style="display:none"></div>
   </div>
   <div class="side" id="side"></div>
+</div>
+
+<!-- GitHub Sync Settings Modal -->
+<div class="mover hide" id="ghModal">
+  <div class="modal" style="width:520px">
+    <div class="mhdr"><div class="mtitle">⚙️ GitHub Sync Settings</div><button class="dp-close" onclick="closeGHModal()">✕</button></div>
+    <div class="mbody">
+      <p style="font-size:12px;color:#475569;margin-bottom:14px;line-height:1.6">Connect to a GitHub repository to store your filing data as a JSON file. This lets the archive sync across devices and persist when you update the app HTML on GitHub Pages.</p>
+      <div class="fg" style="margin-bottom:10px">
+        <label>Personal Access Token (PAT)</label>
+        <input type="password" id="gh_pat" class="dinp" placeholder="ghp_xxxxxxxxxxxx" style="font-family:monospace">
+        <div style="font-size:10px;color:#94a3b8;margin-top:3px">Needs <code>repo</code> scope (or <code>public_repo</code> for public repos). Stored in your browser only.</div>
+      </div>
+      <div class="fg" style="margin-bottom:10px">
+        <label>Repository (owner/repo)</label>
+        <input type="text" id="gh_repo" class="dinp" placeholder="yourname/regulatory-tracker">
+      </div>
+      <div class="fg" style="margin-bottom:10px">
+        <label>Data File Path in Repo</label>
+        <input type="text" id="gh_path" class="dinp" value="regulatory-data.json" placeholder="regulatory-data.json">
+      </div>
+      <div id="ghStatus" style="font-size:11px;margin-top:8px;min-height:18px"></div>
+      <div style="font-size:10px;color:#94a3b8;margin-top:8px;line-height:1.5;background:#fff7ed;border:1px solid #fed7aa;border-radius:5px;padding:7px">⚠️ Note: Attached documents (PDFs, spreadsheets) are stored in your local browser only and will not sync to GitHub due to file size limits. All filing records and metadata will sync.</div>
+    </div>
+    <div class="mfooter">
+      <button class="btn btn-s" onclick="closeGHModal()">Cancel</button>
+      <button class="btn btn-s" onclick="testGHConnection()">Test Connection</button>
+      <button class="btn btn-p" onclick="saveGHSettings()">Save &amp; Sync</button>
+    </div>
+  </div>
 </div>
 
 <!-- Add/Edit Modal -->
@@ -323,6 +354,7 @@ const FILINGS_INIT = [
 {id:'IL-25',market:'Illinois',agency:'ICC',title:'Training Materials Filing (Annual)',frequency:'Annual',ft:'annual',month:12,day:31,owner:'Compliance',priority:'medium',citation:'220 ILCS 5/16-115A(e)(vi)',desc:'Annual filing of training materials with ICC. Documents that sales and customer service staff have received required training on Illinois customer protection rules, marketing standards, and ARES obligations. No specific due date stated — file annually. File electronically via ICC portal.',dln:'Annually (specific date not prescribed — file by year-end)',instr:'1. Compile training materials used for sales agent and customer service training during the year.\n2. Ensure materials cover required topics under 220 ILCS 5/16-115A(e)(vi).\n3. File electronically via ICC portal.\n4. Retain copies of all training materials and attendance records.',links:[{label:'ICC ARES Filing Portal',url:'https://icc.illinois.gov/authority/alternative-retail-electric-suppliers'}],completions:[],status:'pending',active:true},
 {id:'IL-26',market:'Illinois',agency:'ICC',title:'Consumer Education Filing',frequency:'Occurrence-Based',ft:'event_driven',month:null,day:null,dln:'Upon occurrence',owner:'Marketing',priority:'medium',citation:'220 ILCS 5/16-117(g)(4)',desc:'Consumer education materials filed with ICC on an occurrence basis. Required when distributing consumer education materials related to electricity choice, rates, or customer rights in Illinois. File electronically via ICC portal when new consumer education materials are created or distributed.',instr:'1. When creating new consumer education materials for Illinois customers, prepare for ICC filing.\n2. File electronically via ICC portal.\n3. Retain copies of all consumer education materials distributed.',links:[{label:'ICC ARES Filing Portal',url:'https://icc.illinois.gov/authority/alternative-retail-electric-suppliers'}],completions:[],status:'ongoing',active:true},
 {id:'IL-27',market:'Illinois',agency:'ICC',title:'Annual Non-Utility Supplier Diversity Report',frequency:'Annual',ft:'annual',month:6,day:1,owner:'Finance',priority:'medium',citation:'220 ILCS 5/16-111.11',desc:'Annual Non-Utility Supplier Diversity Report filed with ICC by June 1. Reports on the company\'s supplier diversity practices and spend with minority-owned, women-owned, and other diverse businesses. Use the ICC 2026 Non-Utility Supplier Diversity Report Form. File electronically via ICC portal.',dln:'Annually by June 1',instr:'1. Compile supplier diversity spend data for the prior calendar year.\n2. Complete the 2026 Non-Utility Supplier Diversity Report Form (available on ICC ARES webpage).\n3. File electronically via ICC portal by June 1.',links:[{label:'ICC ARES Webpage — Supplier Diversity Forms',url:'https://icc.illinois.gov/authority/alternative-retail-electric-suppliers'}],completions:[],status:'pending',active:true},
+{id:'IL-28',market:'Illinois',agency:'ICC',title:'ICC ORMD Annual Data Request (TC 1.01–1.05)',frequency:'Annual',ft:'annual',month:6,day:15,citation:'220 ILCS 5/20-110; Staff DR TC 1.01–1.05',desc:'Annual data request issued by the ICC\'s Office of Retail Market Development (ORMD) pursuant to Section 20-110 of the Public Utilities Act. Requires reporting of: TC 1.01 — Monthly weighted average residential rate (cents/kWh) in ComEd service area for June–May period; TC 1.02 — Same for Ameren Illinois service area; TC 1.03 — Residential municipal aggregation customer count as of May 31; TC 1.04 — Non-residential municipal aggregation customer count as of May 31; TC 1.05 — Whether company offers time-variant products to residential customers. Response must be notarized and sworn. If no residential customers served during the reporting period, submit a formal letter stating as such. Data is aggregated by ICC — no individual company data is published.',dln:'June 15 each year (covers June [prior year] through May [current year])',instr:'1. Receive annual DR notice from ICC.ORMD@illinois.gov around May 18–19.\n2. Complete the attached Excel spreadsheet (Average Rate Data Request) with monthly weighted average rates for ComEd (TC 1.01) and Ameren Illinois (TC 1.02) service areas.\n3. Report municipal aggregation customer counts as of May 31 for TC 1.03 and TC 1.04.\n4. Answer TC 1.05 regarding time-variant product offerings.\n5. If Base Power had NO residential customers in the June–May period, prepare a formal letter stating this instead of the Excel form.\n6. Have the response sworn and notarized using the attestation form provided in the DR.\n7. Name the file: "BasePower_AnnualDR_[YEAR]" (e.g., "BasePower_AnnualDR_2026").\n8. Submit to Tanya Capellan at Tanya.Capellan@illinois.gov by June 15.',links:[{label:'ICC ARES Authority',url:'https://www.icc.illinois.gov/authority/alternative-retail-electric-suppliers'}],completions:[],status:'pending',active:true},
 {id:'OO-11',market:'Illinois',agency:'ICC',title:'Customer Account Transfer Report (ICC) — One-Off',frequency:'Event-Driven',ft:'event_driven',month:null,day:null,dln:'30 days after transaction',owner:'Regulatory',priority:'medium',citation:'83 Ill. Admin. Code §451',desc:'File customer account transfer report with ICC within 30 days after any acquisition or divestiture of Illinois customer accounts.',instr:'',links:[],completions:[],status:'ongoing',active:true},
 {id:'OO-12',market:'Illinois',agency:'ICC',title:'ARES Filing Information Update — One-Off',frequency:'Event-Driven',ft:'event_driven',month:null,day:null,dln:'10 business days after change',owner:'Regulatory',priority:'medium',citation:'83 Ill. Admin. Code §451',desc:'Update ARES filing information with ICC within 10 business days of any material change to company information, key personnel, or operational details.',instr:'',links:[],completions:[],status:'ongoing',active:true},
 
@@ -380,23 +412,39 @@ let S = {
 const RETIRED_IDS = ['SOS-01','SOS-02','SOS-04','SOS-06','SOS-09','TC-01'];
 
 function save() {
-  try { localStorage.setItem('bpc_rt_v3', JSON.stringify(S.filings)); } catch(e){}
+  try { localStorage.setItem('bpc_rt_v4', JSON.stringify(S.filings)); } catch(e){}
+  syncToGitHub();
 }
 function load() {
   try {
-    const d = localStorage.getItem('bpc_rt_v3');
-    if (d) {
-      const parsed = JSON.parse(d);
-      // Migrate: strip retired IDs, add any new filings from FILINGS_INIT
-      const active = parsed.filter(f=>!RETIRED_IDS.includes(f.id));
-      const existIds = new Set(active.map(f=>f.id));
-      const newOnes = FILINGS_INIT.filter(f=>!existIds.has(f.id)).map(f=>({...f,links:[...(f.links||[])],completions:[]}));
-      S.filings = [...active, ...newOnes];
-    } else {
-      S.filings = FILINGS_INIT.map(f=>({...f,links:[...(f.links||[])],completions:[]}));
+    let raw = localStorage.getItem('bpc_rt_v4');
+    if (raw) {
+      S.filings = JSON.parse(raw);
+      const storedBaseIds = new Set(S.filings.map(f => f.baseId || f.id));
+      FILINGS_INIT.forEach(fi => {
+        if (!storedBaseIds.has(fi.id)) {
+          const nf = {...fi, baseId:fi.id, periodLabel:'', completion:null};
+          delete nf.completions;
+          S.filings.push(nf);
+        }
+      });
+      return;
     }
+    const old = localStorage.getItem('bpc_rt_v3');
+    const source = old ? JSON.parse(old).filter(f => !RETIRED_IDS.includes(f.id)) : FILINGS_INIT;
+    const existIds = new Set(source.map(f => f.id));
+    const merged = [...source];
+    FILINGS_INIT.forEach(fi => { if (!existIds.has(fi.id)) merged.push({...fi}); });
+    S.filings = merged.map(f => {
+      const comps = f.completions || [];
+      const comp = comps.length > 0 ? comps[comps.length - 1] : null;
+      const out = {...f, baseId: f.baseId || f.id, periodLabel: f.periodLabel || '', completion: f.completion !== undefined ? f.completion : comp};
+      delete out.completions;
+      return out;
+    });
+    save();
   } catch(e) {
-    S.filings = FILINGS_INIT.map(f=>({...f,links:[...(f.links||[])],completions:[]}));
+    S.filings = FILINGS_INIT.map(f => ({...f, baseId:f.id, periodLabel:'', completion:null}));
   }
 }
 
@@ -406,6 +454,7 @@ function load() {
 const TODAY = (() => { const d = new Date(); d.setHours(0,0,0,0); return d; })();
 
 function nextDue(f) {
+  if (f.periodDueDate) return new Date(f.periodDueDate);
   const y = TODAY.getFullYear();
   if (f.ft === 'annual' || f.ft === 'semi_annual') {
     if (!f.month) return null;
@@ -435,6 +484,41 @@ function nextDue(f) {
     return d;
   }
   return null;
+}
+
+function computePeriodLabel(date, ft) {
+  if (!date) return '';
+  const y = date.getFullYear();
+  const m = date.getMonth() + 1;
+  if (ft === 'annual') return String(y);
+  if (ft === 'semi_annual') return m <= 6 ? `H1 ${y}` : `H2 ${y}`;
+  if (ft === 'qoffset' || ft === 'qfixed') return `Q${Math.ceil(m/3)} ${y}`;
+  if (ft === 'monthly') {
+    const mn = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return `${mn[m-1]} ${y}`;
+  }
+  return String(y);
+}
+
+function spawnNextPeriod(f, currentDue) {
+  if (!currentDue || f.ft === 'ongoing' || f.ft === 'event_driven') return;
+  const baseId = f.baseId || f.id;
+  if (S.filings.some(x => (x.baseId||x.id) === baseId && x.status !== 'complete' && x.id !== f.id)) return;
+  let nextDate = new Date(currentDue);
+  if (f.ft === 'annual') nextDate = new Date(currentDue.getFullYear()+1, currentDue.getMonth(), currentDue.getDate());
+  else if (f.ft === 'semi_annual') nextDate.setMonth(nextDate.getMonth()+6);
+  else if (f.ft === 'qoffset' || f.ft === 'qfixed') nextDate.setMonth(nextDate.getMonth()+3);
+  else if (f.ft === 'monthly') nextDate.setMonth(nextDate.getMonth()+1);
+  else return;
+  const clone = JSON.parse(JSON.stringify(f));
+  clone.id = `${baseId}_${nextDate.getFullYear()}${String(nextDate.getMonth()+1).padStart(2,'0')}`;
+  clone.baseId = baseId;
+  clone.periodDueDate = nextDate.toISOString().split('T')[0];
+  clone.periodLabel = computePeriodLabel(nextDate, f.ft);
+  clone.status = 'pending';
+  clone.completion = null;
+  clone.active = true;
+  S.filings.push(clone);
 }
 
 function daysUntil(d) {
@@ -473,6 +557,7 @@ function agBadge(ag) { return 'b-'+(ag||'SOS'); }
 function filtered() {
   return S.filings.filter(f => {
     if (!f.active && !S.showArch) return false;
+    if (f.status === 'complete') return false;
     if (S.market !== 'All' && f.market !== S.market) return false;
     if (S.fil.agency !== 'all' && f.agency !== S.fil.agency) return false;
     const si = statusInfo(f);
@@ -560,24 +645,21 @@ function renderTable(fls) {
     {k:'up', lbl:'🔵 Due Within 30 Days', items:[]},
     {k:'sc', lbl:'🗓 Scheduled (Future)', items:[]},
     {k:'ip', lbl:'🟣 In Progress', items:[]},
-    {k:'co', lbl:'✅ Completed', items:[]},
     {k:'on', lbl:'🔄 Ongoing / Continuous', items:[]},
     {k:'ev', lbl:'⚡ Event-Driven', items:[]}
   ];
   fls.forEach(f=>{
     const si=statusInfo(f);
-    if(f.status==='complete') grps[5].items.push(f);
-    else if(f.status==='in_progress') grps[4].items.push(f);
+    if(f.status==='in_progress') grps[4].items.push(f);
     else if(si.lbl.startsWith('Overdue')||si.lbl==='Due Today!') grps[0].items.push(f);
     else if(si.cls==='b-soon') grps[1].items.push(f);
     else if(si.cls==='b-upcoming') grps[2].items.push(f);
     else if(si.cls==='b-scheduled') grps[3].items.push(f);
-    else if(f.ft==='ongoing') grps[6].items.push(f);
-    else grps[7].items.push(f);
+    else if(f.ft==='ongoing') grps[5].items.push(f);
+    else grps[6].items.push(f);
   });
 
   let h = `<table><thead><tr>
-    <th style="width:62px">ID</th>
     <th>Filing / Requirement</th>
     <th style="width:72px">Agency</th>
     <th style="width:140px">Due Date</th>
@@ -587,7 +669,7 @@ function renderTable(fls) {
 
   grps.forEach(g=>{
     if(!g.items.length) return;
-    h+=`<tr class="grp-hdr"><td colspan="6">${g.lbl} <span style="background:#e2e8f0;color:#475569;padding:1px 6px;border-radius:999px;font-size:9px">${g.items.length}</span></td></tr>`;
+    h+=`<tr class="grp-hdr"><td colspan="5">${g.lbl} <span style="background:#e2e8f0;color:#475569;padding:1px 6px;border-radius:999px;font-size:9px">${g.items.length}</span></td></tr>`;
     g.items.forEach(f=>{
       const si=statusInfo(f);
       const nd=nextDue(f);
@@ -606,7 +688,6 @@ function renderTable(fls) {
         : `<button class="btn btn-s btn-xs" onclick="event.stopPropagation();selFiling('${f.id}')">View</button>`;
 
       h+=`<tr class="data${isSel?' sel':''}${!f.active?' arch':''}" onclick="selFiling('${f.id}')">
-        <td><code style="font-size:10px;color:#64748b">${f.id}</code></td>
         <td>
           <div style="font-weight:500;font-size:12px;line-height:1.35">${f.title}</div>
           ${f.citation?`<div style="font-size:10px;color:#94a3b8;margin-top:1px">${f.citation}</div>`:''}
@@ -632,14 +713,13 @@ function renderSide() {
   if(!f){panel.classList.remove('open');return;}
   const si=statusInfo(f);
   const nd=nextDue(f);
-  const comps=f.completions||[];
-  const allAtts=comps.flatMap(c=>c.attachments||[]);
+  const comp = f.completion || null;
+  const allAtts = (comp?.attachments || []);
 
   panel.classList.add('open');
   panel.innerHTML=`
   <div class="dp-hdr">
     <div style="flex:1;min-width:0">
-      <div class="dp-id">${f.id} · ${f.market}</div>
       <div class="dp-title">${f.title}</div>
       <div style="margin-top:5px;display:flex;gap:5px;flex-wrap:wrap">
         <span class="bdg ${agBadge(f.agency)}">${f.agency}</span>
@@ -714,37 +794,35 @@ function renderSide() {
         <div style="display:flex;gap:6px;flex-wrap:wrap">
           ${f.status!=='in_progress'?`<button class="btn btn-s btn-sm" onclick="setSt('${f.id}','in_progress')">▶ Mark In Progress</button>`:''}
           <button class="btn btn-g" onclick="markDone('${f.id}')">✅ Mark Complete & Save</button>
-          ${f.status==='complete'?`<button class="btn btn-s btn-sm" onclick="setSt('${f.id}','pending')">↩ Reopen</button>`:''}
+          ${f.status==='complete'?`<button class="btn btn-s btn-sm" onclick="reopenFiling('${f.id}')">↩ Re-open & Edit</button>`:''}
         </div>
       </div>
     </div>
 
     ${allAtts.length?`
-    <div class="div"></div>
-    <div class="sec">
-      <div class="sec-title">Uploaded Documents (${allAtts.length})</div>
-      ${allAtts.map(a=>`
-        <div class="att">
-          <span style="font-size:15px">${fileIcon(a.type)}</span>
-          <div class="att-info"><div class="att-name">${a.name}</div><div class="att-meta">${fmtDate(a.date)} · ${fmtSize(a.size)}</div></div>
-          ${a.data?`<button class="btn btn-s btn-xs" onclick="dlFile('${a.name}','${a.data}')">⬇</button>`:''}
-        </div>
-      `).join('')}
-    </div>`:''}
+<div class="div"></div>
+<div class="sec">
+  <div class="sec-title">Submitted Documents</div>
+  ${allAtts.map(a=>`
+    <div class="att">
+      <span style="font-size:15px">${fileIcon(a.type)}</span>
+      <div class="att-info"><div class="att-name">${a.name}</div><div class="att-meta">${fmtDate(a.date)} · ${fmtSize(a.size)}</div></div>
+      ${a.data?`<button class="btn btn-s btn-xs" onclick="dlFile('${a.name}','${a.data}')">⬇</button>`:''}
+    </div>
+  `).join('')}
+</div>`:''}
 
-    ${comps.length?`
-    <div class="div"></div>
-    <div class="sec">
-      <div class="sec-title">Completion History</div>
-      ${[...comps].reverse().map(c=>`
-        <div class="hist">
-          <div class="hist-d">✅ ${fmtDate(c.date)}</div>
-          <div class="hist-by">By: ${c.by||'Unknown'}</div>
-          ${c.notes?`<div class="hist-n">"${c.notes}"</div>`:''}
-          ${(c.attachments||[]).length?`<div style="font-size:10px;color:#64748b;margin-top:2px">📎 ${c.attachments.length} document(s)</div>`:''}
-        </div>
-      `).join('')}
-    </div>`:''}
+
+    ${comp?`
+<div class="div"></div>
+<div class="sec">
+  <div class="sec-title">Completion Record</div>
+  <div class="hist">
+    <div class="hist-d">✅ ${fmtDate(comp.date)}</div>
+    ${comp.by?`<div class="hist-by">By: ${comp.by}</div>`:''}
+    ${comp.notes?`<div class="hist-n">"${comp.notes}"</div>`:''}
+  </div>
+</div>`:''}
 
     <div class="div"></div>
     <div class="sec">
@@ -776,10 +854,137 @@ function saveF(id,field,val){const f=S.filings.find(x=>x.id===id);if(f){f[field]
 function setSt(id,st){const f=S.filings.find(x=>x.id===id);if(f){f.status=st;save();render();}}
 function archF(id){if(!confirm('Archive this filing? It will be hidden from the main view. You can restore it anytime by checking "Show archived".'))return;const f=S.filings.find(x=>x.id===id);if(f){f.active=false;save();S.sel=null;render();}}
 function restoreF(id){const f=S.filings.find(x=>x.id===id);if(f){f.active=true;save();render();}}
+function reopenFiling(id){
+  const f=S.filings.find(x=>x.id===id);if(!f)return;
+  f.status='pending';f.completion=null;
+  const m=f.market;S.market=m;S.sel=id;
+  document.querySelectorAll('.tab').forEach(t=>{
+    if(t.getAttribute('onclick')&&t.getAttribute('onclick').includes(`'${m}'`)){
+      document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+      t.classList.add('active');
+    }
+  });
+  if(m!=='Archive')renderAgFil();
+  save();render();
+}
 function addLink(id){const f=S.filings.find(x=>x.id===id);const lbl=document.getElementById(`nll_${id}`).value.trim();const url=document.getElementById(`nlu_${id}`).value.trim();if(!url)return;if(!f.links)f.links=[];f.links.push({label:lbl||url,url,added:new Date().toISOString()});save();renderSide();}
 function rmLink(id,i){const f=S.filings.find(x=>x.id===id);if(f&&f.links){f.links.splice(i,1);save();renderSide();}}
-function quickDone(id){S.sel=id;const f=S.filings.find(x=>x.id===id);if(!f)return;if(!f.completions)f.completions=[];f.completions.push({date:TODAY.toISOString().split('T')[0],by:f.owner||'',notes:'Quick complete',attachments:[]});f.status='complete';save();render();}
-function markDone(id){const f=S.filings.find(x=>x.id===id);if(!f)return;const dt=document.getElementById(`cd_${id}`)?.value||TODAY.toISOString().split('T')[0];const by=document.getElementById(`cb_${id}`)?.value||'';const notes=document.getElementById(`cn_${id}`)?.value||'';const pend=(window._pend||{})[id]||[];if(!f.completions)f.completions=[];f.completions.push({date:dt,by,notes,attachments:pend});f.status='complete';if(window._pend)delete window._pend[id];save();render();}
+function quickDone(id){
+  const f=S.filings.find(x=>x.id===id);if(!f)return;
+  const currentDue=nextDue(f);
+  if(!f.periodDueDate&&currentDue)f.periodDueDate=currentDue.toISOString().split('T')[0];
+  if(!f.periodLabel)f.periodLabel=computePeriodLabel(currentDue||new Date(),f.ft);
+  f.completion={date:TODAY.toISOString().split('T')[0],by:'',notes:'Quick complete',attachments:[]};
+  f.status='complete';
+  spawnNextPeriod(f,currentDue||new Date());
+  save();S.sel=null;render();
+}
+function markDone(id){
+  const f=S.filings.find(x=>x.id===id);if(!f)return;
+  const currentDue=nextDue(f);
+  if(!f.periodDueDate&&currentDue)f.periodDueDate=currentDue.toISOString().split('T')[0];
+  if(!f.periodLabel)f.periodLabel=computePeriodLabel(currentDue||new Date(),f.ft);
+  const dt=document.getElementById(`cd_${id}`)?.value||TODAY.toISOString().split('T')[0];
+  const by=document.getElementById(`cb_${id}`)?.value||'';
+  const notes=document.getElementById(`cn_${id}`)?.value||'';
+  const pend=(window._pend||{})[id]||[];
+  f.completion={date:dt,by,notes,attachments:pend};
+  f.status='complete';
+  if(window._pend)delete window._pend[id];
+  spawnNextPeriod(f,currentDue||new Date());
+  save();S.sel=null;render();
+}
+
+// ─────────────────────────────────────────────
+// GITHUB SYNC
+// ─────────────────────────────────────────────
+let GH = {pat:'', repo:'', path:'regulatory-data.json', sha:null};
+
+function loadGHConfig() {
+  try { const d=localStorage.getItem('bpc_gh_config'); if(d) GH={...GH,...JSON.parse(d)}; } catch(e){}
+}
+
+function openGHModal() {
+  loadGHConfig();
+  document.getElementById('gh_pat').value=GH.pat||'';
+  document.getElementById('gh_repo').value=GH.repo||'';
+  document.getElementById('gh_path').value=GH.path||'regulatory-data.json';
+  document.getElementById('ghStatus').textContent='';
+  document.getElementById('ghModal').classList.remove('hide');
+}
+
+function closeGHModal() { document.getElementById('ghModal').classList.add('hide'); }
+
+async function testGHConnection() {
+  const pat=document.getElementById('gh_pat').value.trim();
+  const repo=document.getElementById('gh_repo').value.trim();
+  const path=document.getElementById('gh_path').value.trim()||'regulatory-data.json';
+  const st=document.getElementById('ghStatus');
+  if(!pat||!repo){st.textContent='⚠️ Enter token and repo first.';st.style.color='#ea580c';return;}
+  st.textContent='⏳ Testing…';st.style.color='#94a3b8';
+  try {
+    const r=await fetch(`https://api.github.com/repos/${repo}/contents/${path}`,{headers:{'Authorization':`token ${pat}`,'Accept':'application/vnd.github.v3+json'}});
+    if(r.ok){st.textContent='✅ Connected! File found in repo.';st.style.color='#16a34a';}
+    else if(r.status===404){st.textContent='✅ Connected to repo (data file will be created on first save).';st.style.color='#16a34a';}
+    else if(r.status===401){st.textContent='❌ Authentication failed. Check your PAT token.';st.style.color='#dc2626';}
+    else{st.textContent=`❌ Error ${r.status} — check repo name.`;st.style.color='#dc2626';}
+  } catch(e){st.textContent='❌ Network error.';st.style.color='#dc2626';}
+}
+
+async function saveGHSettings() {
+  const pat=document.getElementById('gh_pat').value.trim();
+  const repo=document.getElementById('gh_repo').value.trim();
+  const path=document.getElementById('gh_path').value.trim()||'regulatory-data.json';
+  GH={pat,repo,path,sha:GH.sha};
+  localStorage.setItem('bpc_gh_config',JSON.stringify({pat,repo,path}));
+  const st=document.getElementById('ghStatus');
+  st.textContent='⏳ Saving and syncing…';st.style.color='#94a3b8';
+  const ok=await pushToGitHub();
+  if(ok){st.textContent='✅ Saved and synced to GitHub!';st.style.color='#16a34a';updateGHBtn(true);}
+  else{st.textContent='⚠️ Settings saved locally. Sync failed — check token/repo.';st.style.color='#ea580c';}
+}
+
+async function fetchFromGitHub() {
+  loadGHConfig();
+  if(!GH.pat||!GH.repo)return null;
+  try {
+    const r=await fetch(`https://api.github.com/repos/${GH.repo}/contents/${GH.path}`,{headers:{'Authorization':`token ${GH.pat}`,'Accept':'application/vnd.github.v3+json','Cache-Control':'no-cache'}});
+    if(!r.ok)return null;
+    const data=await r.json();
+    GH.sha=data.sha;
+    return JSON.parse(decodeURIComponent(escape(atob(data.content.replace(/\n/g,'')))));
+  } catch(e){return null;}
+}
+
+async function pushToGitHub() {
+  if(!GH.pat||!GH.repo)return false;
+  try {
+    const syncData=S.filings.map(f=>({...f,completion:f.completion?{...f.completion,attachments:(f.completion.attachments||[]).map(a=>({name:a.name,size:a.size,type:a.type,date:a.date}))}:null}));
+    const content=btoa(unescape(encodeURIComponent(JSON.stringify(syncData,null,2))));
+    const body={message:`Update regulatory filings — ${new Date().toISOString().split('T')[0]}`,content};
+    if(GH.sha)body.sha=GH.sha;
+    const r=await fetch(`https://api.github.com/repos/${GH.repo}/contents/${GH.path}`,{method:'PUT',headers:{'Authorization':`token ${GH.pat}`,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},body:JSON.stringify(body)});
+    if(r.ok){const d=await r.json();GH.sha=d.content.sha;return true;}
+    if(r.status===409||r.status===422){
+      const fr=await fetch(`https://api.github.com/repos/${GH.repo}/contents/${GH.path}`,{headers:{'Authorization':`token ${GH.pat}`,'Accept':'application/vnd.github.v3+json'}});
+      if(fr.ok){const fd=await fr.json();GH.sha=fd.sha;body.sha=GH.sha;}
+      const r2=await fetch(`https://api.github.com/repos/${GH.repo}/contents/${GH.path}`,{method:'PUT',headers:{'Authorization':`token ${GH.pat}`,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},body:JSON.stringify(body)});
+      if(r2.ok){const d2=await r2.json();GH.sha=d2.content.sha;return true;}
+    }
+    return false;
+  } catch(e){return false;}
+}
+
+function syncToGitHub() {
+  if(!GH.pat||!GH.repo)return;
+  pushToGitHub().then(ok=>updateGHBtn(ok));
+}
+
+function updateGHBtn(ok) {
+  const btn=document.getElementById('ghBtn');if(!btn)return;
+  if(ok===true){btn.textContent='⚙️ Synced ✓';btn.style.color='#16a34a';setTimeout(()=>{btn.textContent='⚙️ Sync';btn.style.color='';},3000);}
+  else if(ok===false){btn.textContent='⚙️ Sync ✗';btn.style.color='#dc2626';setTimeout(()=>{btn.textContent='⚙️ Sync';btn.style.color='';},4000);}
+}
 
 // ─────────────────────────────────────────────
 // FILES
@@ -843,7 +1048,7 @@ function saveModal(){
   const ft=document.getElementById('fm_ft').value;
   const data={id,market:document.getElementById('fm_mkt').value,agency:document.getElementById('fm_ag').value,title,ft,frequency:document.getElementById('fm_ft').options[document.getElementById('fm_ft').selectedIndex].text,month:parseInt(document.getElementById('fm_mo').value)||null,day:parseInt(document.getElementById('fm_dy').value)||null,citation:document.getElementById('fm_cite').value.trim(),dln:document.getElementById('fm_dln').value.trim(),desc:document.getElementById('fm_desc').value.trim(),instr:document.getElementById('fm_instr').value.trim()};
   if(S.editId){const f=S.filings.find(x=>x.id===S.editId);if(f)Object.assign(f,data);}
-  else{S.filings.push({...data,links:[],completions:[],status:'pending',active:true});}
+  else{S.filings.push({...data,links:[],baseId:data.id,periodLabel:'',completion:null,status:'pending',active:true});}
   save();closeModal();S.sel=id;render();
 }
 
@@ -874,64 +1079,66 @@ function exportICS(){
 // ─────────────────────────────────────────────
 function renderArchive() {
   const el = document.getElementById('archView');
-  // Collect all filings that have at least one completion entry
-  const withComps = S.filings
-    .filter(f => f.completions && f.completions.length > 0)
+  const completed = S.filings
+    .filter(f => f.status === 'complete')
     .sort((a,b) => {
-      // Sort by most recent completion date descending
-      const la = a.completions[a.completions.length-1]?.date || '';
-      const lb = b.completions[b.completions.length-1]?.date || '';
-      return lb.localeCompare(la);
+      const da = a.completion?.date || '';
+      const db = b.completion?.date || '';
+      return db.localeCompare(da);
     });
-
-  if (!withComps.length) {
+  if (!completed.length) {
     el.innerHTML = `<div class="arch-empty">
       <div style="font-size:32px;margin-bottom:8px">📁</div>
       <div style="font-weight:500;color:#64748b;margin-bottom:4px">No completed filings yet</div>
-      <div>When you mark a filing complete and attach documents, they'll appear here for your records.</div>
+      <div>When you mark a filing complete, it will appear here with attached documents for your records.</div>
     </div>`;
     return;
   }
-
-  // Optional search within archive
   const q = (document.getElementById('archSrch')?.value || '').toLowerCase();
-
-  let h = '';
-  withComps.forEach(f => {
-    if (q && !f.title.toLowerCase().includes(q) && !f.id.toLowerCase().includes(q) && !f.agency.toLowerCase().includes(q)) return;
-    const comps = [...f.completions].reverse(); // most recent first
+  let h = `<div style="margin-bottom:12px;display:flex;gap:8px;align-items:center">
+    <div class="sw" style="max-width:320px"><span class="si">🔍</span><input class="sinput" id="archSrch" placeholder="Search archive…" oninput="renderArchive()" value="${q}"></div>
+    <span style="font-size:11px;color:#94a3b8">${completed.length} completed filing${completed.length!==1?'s':''}</span>
+  </div>`;
+  let shown = 0;
+  completed.forEach(f => {
+    if (q && !f.title.toLowerCase().includes(q) && !f.agency.toLowerCase().includes(q) && !(f.market||'').toLowerCase().includes(q)) return;
+    shown++;
+    const comp = f.completion || {};
+    const atts = comp.attachments || [];
+    const period = f.periodLabel || (f.periodDueDate ? computePeriodLabel(new Date(f.periodDueDate), f.ft) : '');
     h += `<div class="arch-filing">
       <div class="arch-filing-hdr">
-        <div>
-          <div class="arch-sub-id">${f.id} · ${f.market}</div>
+        <div style="flex:1">
           <div class="arch-filing-title">${f.title}</div>
+          <div style="display:flex;gap:5px;align-items:center;margin-top:4px;flex-wrap:wrap">
+            <span class="bdg ${agBadge(f.agency)}">${f.agency}</span>
+            <span style="font-size:10px;color:#64748b">${f.market}</span>
+            ${period?`<span style="font-size:10px;background:#f1f5f9;color:#475569;padding:1px 7px;border-radius:999px;font-weight:600">${period}</span>`:''}
+          </div>
         </div>
-        <span class="bdg ${agBadge(f.agency)}">${f.agency}</span>
-        <span style="font-size:10px;color:#94a3b8;font-weight:500">${comps.length} submission${comps.length>1?'s':''}</span>
-      </div>`;
-    comps.forEach((c,i) => {
-      const atts = c.attachments || [];
-      h += `<div class="arch-entry">
-        <div class="arch-date">${fmtDate(c.date)}</div>
+        <button class="btn btn-s btn-xs" onclick="reopenFiling('${f.id}')">↩ Re-open</button>
+      </div>
+      <div class="arch-entry">
+        <div class="arch-date">${fmtDate(comp.date)}</div>
         <div class="arch-meta">
-          ${c.by ? `<span style="font-weight:600">${c.by}</span> · ` : ''}
-          ${c.notes ? `<span>${c.notes}</span>` : '<span style="color:#94a3b8;font-style:italic">No notes recorded</span>'}
-          ${atts.length ? `<div class="arch-atts">
+          ${comp.by?`<span style="font-weight:600">${comp.by}</span>`:''}
+          ${comp.by&&comp.notes?' · ':''}
+          ${comp.notes?`<span>${comp.notes}</span>`:(!comp.by?'<span style="color:#94a3b8;font-style:italic">No notes recorded</span>':'')}
+          ${atts.length?`<div class="arch-atts">
             ${atts.map(a=>`
               <div class="arch-att">
                 <span>${fileIcon(a.type)}</span>
                 <span class="arch-att-name">${a.name}</span>
                 <span style="color:#94a3b8;font-size:10px">${fmtSize(a.size)}</span>
-                ${a.data?`<button class="btn btn-g btn-xs" onclick="dlFile('${a.name.replace(/'/g,"\\'")}','${a.data}')">⬇ Download</button>`:''}
+                ${a.data?`<button class="btn btn-g btn-xs" onclick="dlFile('${a.name.replace(/'/g,"\\'")}','${a.data}')">⬇ Download</button>`:'<span style="font-size:10px;color:#94a3b8">(file on original device)</span>'}
               </div>`).join('')}
-          </div>` : `<div style="font-size:10px;color:#94a3b8;margin-top:3px">No documents attached</div>`}
+          </div>`:`<div style="font-size:10px;color:#94a3b8;margin-top:3px">No documents attached</div>`}
         </div>
-      </div>`;
-    });
-    h += '</div>';
+      </div>
+    </div>`;
   });
-
-  el.innerHTML = h || `<div class="arch-empty">No results match your search.</div>`;
+  if (!shown) h += `<div class="arch-empty">No results match your search.</div>`;
+  el.innerHTML = h;
 }
 
 // ─────────────────────────────────────────────
@@ -969,8 +1176,24 @@ function render(){
 // ─────────────────────────────────────────────
 // INIT
 // ─────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded',()=>{
-  load();
+document.addEventListener('DOMContentLoaded', async ()=>{
+  loadGHConfig();
+  const ghData = await fetchFromGitHub();
+  if (ghData && ghData.length) {
+    const localRaw=localStorage.getItem('bpc_rt_v4');
+    const local=localRaw?JSON.parse(localRaw):null;
+    S.filings=ghData.map(gf=>{
+      const lf=local?local.find(x=>x.id===gf.id):null;
+      if(lf&&lf.completion&&gf.completion)gf.completion.attachments=lf.completion.attachments||[];
+      return gf;
+    });
+    const ghIds=new Set(S.filings.map(f=>f.baseId||f.id));
+    FILINGS_INIT.forEach(fi=>{
+      if(!ghIds.has(fi.id))S.filings.push({...fi,baseId:fi.id,periodLabel:'',completion:null});
+    });
+  } else {
+    load();
+  }
   renderAgFil();
   render();
 });
