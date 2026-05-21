@@ -1449,11 +1449,16 @@
         "url": "https://icc.illinois.gov/authority/alternative-retail-electric-suppliers"
       }
     ],
-    "status": "pending",
+    "status": "complete",
     "active": true,
     "baseId": "IL-27",
     "periodLabel": "2026",
-    "completion": null,
+    "completion": {
+      "date": "2026-05-21",
+      "by": "Carter",
+      "notes": "",
+      "attachments": []
+    },
     "periodDueDate": "2026-06-01"
   },
   {
