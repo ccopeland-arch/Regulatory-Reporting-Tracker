@@ -1607,11 +1607,16 @@
         "url": "https://mbrweb.ferc.gov/"
       }
     ],
-    "status": "pending",
+    "status": "complete",
     "active": true,
     "baseId": "FE-03",
     "periodLabel": "Jun 2026",
-    "completion": null,
+    "completion": {
+      "date": "2026-05-21",
+      "by": "Carter",
+      "notes": "Not needed this month - no changes ",
+      "attachments": []
+    },
     "periodDueDate": "2026-06-15"
   },
   {
