@@ -939,9 +939,9 @@ async function saveGHSettings() {
   localStorage.setItem('bpc_gh_config',JSON.stringify({pat,repo,path}));
   const st=document.getElementById('ghStatus');
   st.textContent='⏳ Saving and syncing…';st.style.color='#94a3b8';
-  const ok=await pushToGitHub();
-  if(ok){st.textContent='✅ Saved and synced to GitHub!';st.style.color='#16a34a';updateGHBtn(true);}
-  else{st.textContent='⚠️ Settings saved locally. Sync failed — check token/repo.';st.style.color='#ea580c';}
+  const result=await pushToGitHub();
+  if(result===true){st.textContent='✅ Saved and synced to GitHub!';st.style.color='#16a34a';updateGHBtn(true);}
+  else{st.textContent=`⚠️ Sync failed — HTTP ${result}. ${result===403?'Token missing write permissions (needs repo scope).':result===401?'Token invalid or expired.':result===404?'Repo not found — check owner/repo name.':result===422?'Content error — try again.':'Check token and repo name.'}`;st.style.color='#ea580c';}
 }
 
 async function fetchFromGitHub() {
@@ -957,7 +957,7 @@ async function fetchFromGitHub() {
 }
 
 async function pushToGitHub() {
-  if(!GH.pat||!GH.repo)return false;
+  if(!GH.pat||!GH.repo)return 'missing-config';
   try {
     const syncData=S.filings.map(f=>({...f,completion:f.completion?{...f.completion,attachments:(f.completion.attachments||[]).map(a=>({name:a.name,size:a.size,type:a.type,date:a.date}))}:null}));
     const content=btoa(unescape(encodeURIComponent(JSON.stringify(syncData,null,2))));
@@ -965,19 +965,21 @@ async function pushToGitHub() {
     if(GH.sha)body.sha=GH.sha;
     const r=await fetch(`https://api.github.com/repos/${GH.repo}/contents/${GH.path}`,{method:'PUT',headers:{'Authorization':`token ${GH.pat}`,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},body:JSON.stringify(body)});
     if(r.ok){const d=await r.json();GH.sha=d.content.sha;return true;}
+    // On SHA conflict, fetch fresh SHA and retry once
     if(r.status===409||r.status===422){
       const fr=await fetch(`https://api.github.com/repos/${GH.repo}/contents/${GH.path}`,{headers:{'Authorization':`token ${GH.pat}`,'Accept':'application/vnd.github.v3+json'}});
       if(fr.ok){const fd=await fr.json();GH.sha=fd.sha;body.sha=GH.sha;}
       const r2=await fetch(`https://api.github.com/repos/${GH.repo}/contents/${GH.path}`,{method:'PUT',headers:{'Authorization':`token ${GH.pat}`,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},body:JSON.stringify(body)});
       if(r2.ok){const d2=await r2.json();GH.sha=d2.content.sha;return true;}
+      return r2.status;
     }
-    return false;
-  } catch(e){return false;}
+    return r.status;
+  } catch(e){return 'network-error';}
 }
 
 function syncToGitHub() {
   if(!GH.pat||!GH.repo)return;
-  pushToGitHub().then(ok=>updateGHBtn(ok));
+  pushToGitHub().then(result=>updateGHBtn(result===true));
 }
 
 function updateGHBtn(ok) {
