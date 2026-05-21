@@ -1885,11 +1885,17 @@
         "url": "https://www.pjm.com/-/media/DotCom/documents/manuals/m19.ashx"
       }
     ],
-    "status": "pending",
+    "status": "complete",
     "active": true,
     "baseId": "PJ-04",
-    "periodLabel": "",
-    "completion": null
+    "periodLabel": "Jun 2026",
+    "completion": {
+      "date": "2026-05-21",
+      "by": "Operations",
+      "notes": "Not needed this year",
+      "attachments": []
+    },
+    "periodDueDate": "2026-06-10"
   },
   {
     "id": "PJ-05",
@@ -2295,5 +2301,32 @@
     "periodLabel": "2027",
     "completion": null,
     "periodDueDate": "2027-05-31"
+  },
+  {
+    "id": "PJ-04_202607",
+    "market": "PJM",
+    "agency": "PJM",
+    "title": "Monthly Hourly Load Data Submission",
+    "frequency": "Monthly",
+    "ft": "monthly",
+    "day": 10,
+    "owner": "Operations",
+    "priority": "high",
+    "citation": "PJM Manual 19",
+    "dln": "10th of the following month",
+    "desc": "Monthly submission of hourly load data by the 10th of the following month. Required for all PJM LSEs. Data is used for load forecasting, settlement, and capacity planning.",
+    "instr": "",
+    "links": [
+      {
+        "label": "PJM Manual 19 (Load Forecasting)",
+        "url": "https://www.pjm.com/-/media/DotCom/documents/manuals/m19.ashx"
+      }
+    ],
+    "status": "pending",
+    "active": true,
+    "baseId": "PJ-04",
+    "periodLabel": "Jul 2026",
+    "completion": null,
+    "periodDueDate": "2026-07-10"
   }
 ]
