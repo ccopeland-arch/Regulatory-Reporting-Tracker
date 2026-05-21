@@ -1449,11 +1449,17 @@
         "url": "https://icc.illinois.gov/authority/alternative-retail-electric-suppliers"
       }
     ],
-    "status": "pending",
+    "status": "complete",
     "active": true,
     "baseId": "IL-27",
-    "periodLabel": "",
-    "completion": null
+    "periodLabel": "2026",
+    "completion": {
+      "date": "2026-05-21",
+      "by": "Finance",
+      "notes": "Not needed for 20206. ",
+      "attachments": []
+    },
+    "periodDueDate": "2026-06-01"
   },
   {
     "id": "OO-11",
@@ -2193,5 +2199,33 @@
     "baseId": "IL-28",
     "periodLabel": "",
     "completion": null
+  },
+  {
+    "id": "IL-27_202706",
+    "market": "Illinois",
+    "agency": "ICC",
+    "title": "Annual Non-Utility Supplier Diversity Report",
+    "frequency": "Annual",
+    "ft": "annual",
+    "month": 6,
+    "day": 1,
+    "owner": "Finance",
+    "priority": "medium",
+    "citation": "220 ILCS 5/16-111.11",
+    "desc": "Annual Non-Utility Supplier Diversity Report filed with ICC by June 1. Reports on the company's supplier diversity practices and spend with minority-owned, women-owned, and other diverse businesses. Use the ICC 2026 Non-Utility Supplier Diversity Report Form. File electronically via ICC portal.",
+    "dln": "Annually by June 1",
+    "instr": "1. Compile supplier diversity spend data for the prior calendar year.\n2. Complete the 2026 Non-Utility Supplier Diversity Report Form (available on ICC ARES webpage).\n3. File electronically via ICC portal by June 1.",
+    "links": [
+      {
+        "label": "ICC ARES Webpage — Supplier Diversity Forms",
+        "url": "https://icc.illinois.gov/authority/alternative-retail-electric-suppliers"
+      }
+    ],
+    "status": "pending",
+    "active": true,
+    "baseId": "IL-27",
+    "periodLabel": "2027",
+    "completion": null,
+    "periodDueDate": "2027-06-01"
   }
 ]
