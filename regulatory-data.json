@@ -108,29 +108,28 @@
     "id": "TX-06",
     "market": "Texas",
     "agency": "PUCT",
-    "title": "EFL Renewable Mix Update",
+    "title": "Electricity Facts Label (EFL) Filing",
     "frequency": "Annual",
     "ft": "annual",
     "month": 7,
     "day": 1,
     "owner": "Regulatory",
     "priority": "high",
-    "citation": "25.476",
-    "desc": "EFL needs to be updated annually by 7/1\nhttps://ftp.puc.texas.gov/public/puct-info/agency/rulesnlaws/subrules/electric/25.476/25.476.pdf\nDoes not need to be filed anywhere.",
-    "instr": "https://www.ercot.com/mktinfo/retail/electric/\nInform Growth",
+    "citation": "16 TAC 25.475",
+    "desc": "EFL must be filed with PUCT prior to offering any new electricity product to customers. Also required when existing product terms change materially. Filed via PUCT Interchange Filing System before product launch.",
+    "instr": "",
     "links": [],
-    "status": "complete",
+    "status": "pending",
     "active": true,
     "dln": "",
     "baseId": "TX-06",
-    "periodLabel": "2026",
+    "periodLabel": "",
     "completion": {
-      "date": "2026-05-21",
-      "by": "Carter",
-      "notes": "Noticed Thejas about increase to 37.2% annual average. ",
+      "date": "2026-05-20",
+      "by": "Regulatory",
+      "notes": "",
       "attachments": []
-    },
-    "periodDueDate": "2026-07-01"
+    }
   },
   {
     "id": "TX-07",
@@ -1456,8 +1455,8 @@
     "periodLabel": "2026",
     "completion": {
       "date": "2026-05-21",
-      "by": "Carter",
-      "notes": "",
+      "by": "Finance",
+      "notes": "Not needed for 20206. ",
       "attachments": []
     },
     "periodDueDate": "2026-06-01"
@@ -1608,17 +1607,11 @@
         "url": "https://mbrweb.ferc.gov/"
       }
     ],
-    "status": "complete",
+    "status": "ongoing",
     "active": true,
     "baseId": "FE-03",
-    "periodLabel": "Jun 2026",
-    "completion": {
-      "date": "2026-05-21",
-      "by": "Carter",
-      "notes": "Not needed this month - no changes ",
-      "attachments": []
-    },
-    "periodDueDate": "2026-06-15"
+    "periodLabel": "",
+    "completion": null
   },
   {
     "id": "FE-04",
@@ -1843,9 +1836,9 @@
     "baseId": "PJ-02",
     "periodLabel": "2026",
     "completion": {
-      "date": "2026-05-21",
+      "date": "2026-05-26",
       "by": "Regulatory",
-      "notes": "Not needed this year",
+      "notes": "",
       "attachments": []
     },
     "periodDueDate": "2026-05-31"
@@ -1892,17 +1885,11 @@
         "url": "https://www.pjm.com/-/media/DotCom/documents/manuals/m19.ashx"
       }
     ],
-    "status": "complete",
+    "status": "pending",
     "active": true,
     "baseId": "PJ-04",
-    "periodLabel": "Jun 2026",
-    "completion": {
-      "date": "2026-05-21",
-      "by": "Operations",
-      "notes": "Not needed this year",
-      "attachments": []
-    },
-    "periodDueDate": "2026-06-10"
+    "periodLabel": "",
+    "completion": null
   },
   {
     "id": "PJ-05",
@@ -2213,24 +2200,11 @@
         "url": "https://www.icc.illinois.gov/authority/alternative-retail-electric-suppliers"
       }
     ],
-    "status": "complete",
+    "status": "pending",
     "active": true,
     "baseId": "IL-28",
-    "periodLabel": "2026",
-    "completion": {
-      "date": "2026-05-21",
-      "by": "Carter",
-      "notes": "Sent via email. This will report will be more involved next year. ",
-      "attachments": [
-        {
-          "name": "BaseRetail_AnnualDR_2026.pdf",
-          "size": 4124282,
-          "type": "application/pdf",
-          "date": "2026-05-21"
-        }
-      ]
-    },
-    "periodDueDate": "2026-06-15"
+    "periodLabel": "",
+    "completion": null
   },
   {
     "id": "IL-27_202706",
@@ -2261,32 +2235,6 @@
     "periodDueDate": "2027-06-01"
   },
   {
-    "id": "IL-28_202706",
-    "market": "Illinois",
-    "agency": "ICC",
-    "title": "ICC ORMD Annual Data Request (TC 1.01–1.05)",
-    "frequency": "Annual",
-    "ft": "annual",
-    "month": 6,
-    "day": 15,
-    "citation": "220 ILCS 5/20-110; Staff DR TC 1.01–1.05",
-    "desc": "Annual data request issued by the ICC's Office of Retail Market Development (ORMD) pursuant to Section 20-110 of the Public Utilities Act. Requires reporting of: TC 1.01 — Monthly weighted average residential rate (cents/kWh) in ComEd service area for June–May period; TC 1.02 — Same for Ameren Illinois service area; TC 1.03 — Residential municipal aggregation customer count as of May 31; TC 1.04 — Non-residential municipal aggregation customer count as of May 31; TC 1.05 — Whether company offers time-variant products to residential customers. Response must be notarized and sworn. If no residential customers served during the reporting period, submit a formal letter stating as such. Data is aggregated by ICC — no individual company data is published.",
-    "dln": "June 15 each year (covers June [prior year] through May [current year])",
-    "instr": "1. Receive annual DR notice from ICC.ORMD@illinois.gov around May 18–19.\n2. Complete the attached Excel spreadsheet (Average Rate Data Request) with monthly weighted average rates for ComEd (TC 1.01) and Ameren Illinois (TC 1.02) service areas.\n3. Report municipal aggregation customer counts as of May 31 for TC 1.03 and TC 1.04.\n4. Answer TC 1.05 regarding time-variant product offerings.\n5. If Base Power had NO residential customers in the June–May period, prepare a formal letter stating this instead of the Excel form.\n6. Have the response sworn and notarized using the attestation form provided in the DR.\n7. Name the file: \"BasePower_AnnualDR_[YEAR]\" (e.g., \"BasePower_AnnualDR_2026\").\n8. Submit to Tanya Capellan at Tanya.Capellan@illinois.gov by June 15.",
-    "links": [
-      {
-        "label": "ICC ARES Authority",
-        "url": "https://www.icc.illinois.gov/authority/alternative-retail-electric-suppliers"
-      }
-    ],
-    "status": "pending",
-    "active": true,
-    "baseId": "IL-28",
-    "periodLabel": "2027",
-    "completion": null,
-    "periodDueDate": "2027-06-15"
-  },
-  {
     "id": "PJ-02_202705",
     "market": "PJM",
     "agency": "PJM",
@@ -2308,82 +2256,5 @@
     "periodLabel": "2027",
     "completion": null,
     "periodDueDate": "2027-05-31"
-  },
-  {
-    "id": "PJ-04_202607",
-    "market": "PJM",
-    "agency": "PJM",
-    "title": "Monthly Hourly Load Data Submission",
-    "frequency": "Monthly",
-    "ft": "monthly",
-    "day": 10,
-    "owner": "Operations",
-    "priority": "high",
-    "citation": "PJM Manual 19",
-    "dln": "10th of the following month",
-    "desc": "Monthly submission of hourly load data by the 10th of the following month. Required for all PJM LSEs. Data is used for load forecasting, settlement, and capacity planning.",
-    "instr": "",
-    "links": [
-      {
-        "label": "PJM Manual 19 (Load Forecasting)",
-        "url": "https://www.pjm.com/-/media/DotCom/documents/manuals/m19.ashx"
-      }
-    ],
-    "status": "pending",
-    "active": true,
-    "baseId": "PJ-04",
-    "periodLabel": "Jul 2026",
-    "completion": null,
-    "periodDueDate": "2026-07-10"
-  },
-  {
-    "id": "FE-03_202607",
-    "market": "FERC",
-    "agency": "FERC",
-    "title": "MBR Database Monthly Submission",
-    "frequency": "Monthly (if changes)",
-    "ft": "monthly",
-    "day": 15,
-    "owner": "Regulatory",
-    "priority": "high",
-    "citation": "18 CFR §35.42",
-    "desc": "Monthly MBR database submission by the 15th of each month — only required if changes occurred. Includes updates to asset appendices, affiliate lists, and market conditions. Skip if no changes.",
-    "dln": "15th of each month (only if changes occurred)",
-    "instr": "",
-    "links": [
-      {
-        "label": "FERC MBR Database Portal",
-        "url": "https://mbrweb.ferc.gov/"
-      }
-    ],
-    "status": "pending",
-    "active": true,
-    "baseId": "FE-03",
-    "periodLabel": "Jul 2026",
-    "completion": null,
-    "periodDueDate": "2026-07-15"
-  },
-  {
-    "id": "TX-06_202707",
-    "market": "Texas",
-    "agency": "PUCT",
-    "title": "EFL Renewable Mix Update",
-    "frequency": "Annual",
-    "ft": "annual",
-    "month": 7,
-    "day": 1,
-    "owner": "Regulatory",
-    "priority": "high",
-    "citation": "25.476",
-    "desc": "EFL needs to be updated annually by 7/1\nhttps://ftp.puc.texas.gov/public/puct-info/agency/rulesnlaws/subrules/electric/25.476/25.476.pdf\nDoes not need to be filed anywhere.",
-    "instr": "https://www.ercot.com/mktinfo/retail/electric/\nInform Growth",
-    "links": [],
-    "status": "pending",
-    "active": true,
-    "dln": "",
-    "baseId": "TX-06",
-    "periodLabel": "2027",
-    "completion": null,
-    "periodDueDate": "2027-07-01"
   }
 ]
